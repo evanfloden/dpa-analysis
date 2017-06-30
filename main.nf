@@ -36,7 +36,7 @@ log.info "Input trees (NEWICK)                  : ${params.trees}"
 log.info "Output directory (DIRECTORY)          : ${params.output}"
 log.info "Alignment method [CLUSTALO|MAFFT|UPP] : ${params.align_method}"
 log.info "Tree method [CLUSTALO|MAFFT|RANDOM]   : ${params.tree_method}"
-log.info "Use double progressive alignment      : ${params.dpa}"
+log.info "Use double progressive alignment      : ${params.dpa_align}"
 log.info "\n"
 
 Channel
@@ -47,7 +47,7 @@ Channel
 
 Channel
   .fromPath("params.refs")
-  .ifEmpty{ error "No files found in ${params.refs}"}
+  //.ifEmpty{ error "No files found in ${params.refs}"}
   .map { item -> [ item.baseName, item] }
   .into{ references }
 
@@ -65,6 +65,4 @@ sequences
   .view ()
   .set { datasets } 
    
-
-
 
