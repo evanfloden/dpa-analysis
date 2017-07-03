@@ -39,30 +39,91 @@ log.info "Tree method [CLUSTALO|MAFFT|RANDOM]   : ${params.tree_method}"
 log.info "Use double progressive alignment      : ${params.dpa_align}"
 log.info "\n"
 
+
+// Channels for sequences [REQUIRED]
 Channel
-  .fromPath("params.seqs")
+  .fromPath(params.seqs)
   .ifEmpty{ error "No files found in ${params.seqs}"}
   .map { item -> [ item.baseName, item] }
-  .into{ sequences }
+  .into { seqs; seqs2; seqs3  }
 
-Channel
-  .fromPath("params.refs")
-  //.ifEmpty{ error "No files found in ${params.refs}"}
-  .map { item -> [ item.baseName, item] }
-  .into{ references }
+// Channels for reference alignments [OPTIONAL]
+if( params.refs ) {
+  Channel
+    .fromPath(params.refs)
+    .map { item -> [ item.baseName, item] }
+    .into { refs; refs2 }
 
-Channel
-  .fromPath("params.trees")
- // .ifEmpty{ error "No files found in ${params.trees}"}
-  .map { item -> [ item.baseName, item] }
-  .into{ trees }
+  seqs2
+    .combine( refs, by: 0)
+    .view()
+    .into { seqsAndRefs; seqsAndRefs2}
+}
 
-sequences
-  .groupTuple(references)
-  .map { item -> [ item[0][0], item[0][1], item[1][1] ]}
-  .groupTuple( trees )
-  .map { item -> [ item[0][0], item[0][1], item[0][2], item[1][1] ]}
-  .view ()
-  .set { datasets } 
-   
+// Channels for trees [OPTIONAL]
+if (params.trees) {
+  Channel
+    .fromPath(params.trees)
+    .map { item -> [ item.baseName, item] }
+    .into { trees; trees2 }
+  seqs3
+    .combine( trees2, by: 0)
+    .set { seqsAndTrees }
+}
+
+
+// IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
+if( params.refs ) {
+  process combine_seqs {
+    tag "${id}"
+ 
+    input:
+    set val(id), file(sequences), file(references) from seqsAndRefs2
+
+    output:
+    set val(id), file("shuffledCompleteSequences.fa") into sequences
+
+    script:
+    """
+    # CREATE HEADERS FILE WITH EACH SEQUENCE ID IN RANDOM ORDER
+    grep '^>' ${sequences} > headers.txt
+    grep '^>' ${references} >> headers.txt
+    grep '^>' headers.txt | sort -R >> random_headers.txt
+
+    # CREATE FASTA FILE CONTAINING ALL SEQUENCES
+    esl-reformat --informat afa fasta ${references} > ref_seqs.fa
+    cat ref_seqs.fa > completeSeqs.fa
+    cat ${sequences} >> completeSeqs.fa
+
+    # USE RANDOM HEADERS TO CREATE RANDOM ORDERED FASTA
+    faSomeRecords completeSeqs.fa random_headers.txt shufflesCompleteSequences.fa
+    """
+  }
+}
+if (! params.refs ) {
+  seqs2
+    .set{sequences}
+}
+
+
+
+// IF GUIDE TREES ARE NOT PRESENT, GENERATE GUIDE TREES USING TREE METHOD
+if (! params.trees ) {
+  process guide_trees {                       
+
+     tag "${params.tree_method}/${id}"
+     publishDir "${params.output/guide_trees}", mode: 'copy', overwrite: true
+
+     input:
+       set val(id), file(sequences) from sequences
+
+     output:
+       set val(id), file("${id}.nwk") into guide_trees
+
+     script:
+       template "trees/generate_tree_${params.tree_method}.sh"
+  }
+}        
+
+
 
