@@ -56,74 +56,105 @@ if( params.refs ) {
 
   seqs2
     .combine( refs, by: 0)
-    .view()
     .into { seqsAndRefs; seqsAndRefs2}
 }
 
-// Channels for trees [OPTIONAL]
+// Channels for user provided trees [OPTIONAL]
 if (params.trees) {
   Channel
     .fromPath(params.trees)
-    .map { item -> [ item.baseName, item] }
+    .map { item -> [ item.baseName, "USER_PROVIDED", item] }
     .into { trees; trees2 }
-  seqs3
-    .combine( trees2, by: 0)
-    .set { seqsAndTrees }
+  //seqs3
+  //  .combine( trees2, by: 0)
+  //  .set { seqsAndTrees }
 }
+
+
+//
+// EXPLICITLY STATE WHICH MODE WE ARE RUNNING IN BASED ON INPUT ARGUMENTS
+// 
 
 
 // IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
 if( params.refs ) {
   process combine_seqs {
+
     tag "${id}"
+    publishDir "${params.output}/${workflow.start}/sequences", mode: 'copy', overwrite: true
  
     input:
     set val(id), file(sequences), file(references) from seqsAndRefs2
 
     output:
-    set val(id), file("shuffledCompleteSequences.fa") into sequences
+    set val(id), file("shuffledCompleteSequences.fa") into seqsAndRefsComplete
 
     script:
     """
-    # CREATE HEADERS FILE WITH EACH SEQUENCE ID IN RANDOM ORDER
-    grep '^>' ${sequences} > headers.txt
-    grep '^>' ${references} >> headers.txt
-    grep '^>' headers.txt | sort -R >> random_headers.txt
-
     # CREATE FASTA FILE CONTAINING ALL SEQUENCES
     esl-reformat --informat afa fasta ${references} > ref_seqs.fa
     cat ref_seqs.fa > completeSeqs.fa
     cat ${sequences} >> completeSeqs.fa
-
-    # USE RANDOM HEADERS TO CREATE RANDOM ORDERED FASTA
-    faSomeRecords completeSeqs.fa random_headers.txt shufflesCompleteSequences.fa
+  
+    # SHUFFLE SEQUENCES
+    sample -d 42 --lines-per-offset=2 completeSeqs.fa > shuffledCompleteSequences.fa
     """
   }
 }
-if (! params.refs ) {
-  seqs2
-    .set{sequences}
+
+if ( params.refs ) {
+  Channel
+    .from (false)
+    .set ( seqs3 )
 }
 
+seqsAndRefsComplete
+  .concat ( seqs3 )
+  .into { seqsForAlign; seqsForTrees }
 
 
-// IF GUIDE TREES ARE NOT PRESENT, GENERATE GUIDE TREES USING TREE METHOD
+// IF GUIDE TREES ARE NOT PROVIDED, GENERATE GUIDE TREES USING "--tree_method"
 if (! params.trees ) {
   process guide_trees {                       
 
      tag "${params.tree_method}/${id}"
-     publishDir "${params.output/guide_trees}", mode: 'copy', overwrite: true
+     publishDir "${params.output}/${workflow.start}/guide_trees}", mode: 'copy', overwrite: true
 
      input:
-       set val(id), file(sequences) from sequences
+       set val(id), file(seqs) from seqsForTrees
 
      output:
-       set val(id), file("${id}.nwk") into guide_trees
+       set val(id), val({params.tree_method}), file("${id}.${params.tree_method}.dnd") into guide_trees
 
      script:
-       template "trees/generate_tree_${params.tree_method}.sh"
+       template "tree/generate_tree_${params.tree_method}.sh"
   }
 }        
+//if ( params.trees ) {
+//  trees
+//    .set { guide_trees }
+//}
 
+
+seqsForAlign
+  .combine ( guide_trees, by:0 )
+  .view()
+  .set { seqsAndTrees }
+
+
+process alignment {
+  
+  tag "${params.align_method}/${id}"
+  publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
+
+  input:
+    set val(id), file(seqs), val(tree_method), file(guide_tree) from seqsAndTrees
+
+  output:
+    set val(id), val("${params.align_method}"), val(tree_method), file("${id}.${params.align_method}.aln") into alignments
+
+   script:
+     template "align/generate_alignment_${params.align_method}.sh"
+}
 
 

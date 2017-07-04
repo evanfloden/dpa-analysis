@@ -18,7 +18,9 @@ RUN apt-get update \
 		cmake \
 		curl \
                 libargtable2-0 \
-                ca-certificates
+                ca-certificates \
+                libpng12-0
+                
 
 # install argtable 2
 RUN wget http://prdownloads.sourceforge.net/argtable/argtable2-13.tar.gz && \
