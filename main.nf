@@ -21,8 +21,8 @@
  * Main dpa-analysis pipeline script
  *
  * @authors
- * Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  * Evan Floden <evanfloden@gmail.com>
+ * Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  * Edgar Garriga
  * Cedric Notredame 
  */
@@ -36,8 +36,9 @@ log.info "Input trees (NEWICK)                        : ${params.trees}"
 log.info "Output directory (DIRECTORY)                : ${params.output}"
 log.info "Alignment method [CLUSTALO|MAFFT|UPP]       : ${params.align_method}"
 log.info "Tree method [CLUSTALO|MAFFT|RANDOM]         : ${params.tree_method}"
-log.info "Perform double progressive alignments (DPA) : ${params.dpa_align}"
 log.info "Perform standard alignments                 : ${params.std_align}"
+log.info "Perform double progressive alignments (DPA) : ${params.dpa_align}"
+log.info "Bucket Sizes for DPA                        : ${params.buckets}"
 log.info "\n"
 
 
@@ -97,8 +98,9 @@ else if ( params.seqs && params.refs && params.trees ) {
 else { error "Error in determining running mode, see README." }
 
 
-
+//
 // IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
+//
 if( params.refs ) {
   process combine_seqs {
 
@@ -107,7 +109,9 @@ if( params.refs ) {
  
     input:
     set val(id), \
-        file(sequences), file(references) from seqsAndRefs2
+        file(sequences), \
+        file(references) \
+        from seqsAndRefs2
 
     output:
     set val(id), \
@@ -117,12 +121,14 @@ if( params.refs ) {
     script:
       """
       # CREATE A FASTA FILE CONTAINING ALL SEQUENCES (SEQS + REFS)
-      esl-reformat --informat afa fasta ${references} > ref_seqs.fa
-      cat ref_seqs.fa > completeSeqs.fa
-      cat ${sequences} >> completeSeqs.fa
-  
-      # SHUFFLE SEQUENCES USING SAMPLE COMMAND
-      sample -d 42 --lines-per-offset=2 completeSeqs.fa > shuffledCompleteSequences.fa
+      t_coffee -other_pg seq_reformat -in ${references} -output fasta_seq -out refs.tmp.fa
+      t_coffee -other_pg seq_reformat -in ${sequences} -output fasta_seq -out seqs.tmp.fa
+
+      cat refs.tmp.fa > completeSeqs.fa
+      cat seqs.tmp.fa >> completeSeqs.fa
+
+      # SHUFFLE ORDER OF SEQUENCES
+      t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
       """
   }
 }
@@ -133,18 +139,15 @@ if ( params.refs ) {
     .set { seqs3 }
 }
 
-
 if ( !params.refs ) {
   Channel
     .empty()
     .set { seqsAndRefsComplete }
 }
 
-
 seqsAndRefsComplete
   .concat ( seqs3 )
   .into { seqsForAlign; seqsForTrees }
-
 
 // IF GUIDE TREES ARE NOT PROVIDED, GENERATE GUIDE TREES USING "--tree_method"
 if (! params.trees ) {
@@ -183,11 +186,9 @@ trees1
   .concat ( trees2 )
   .set { treesForAlignment }
 
-
 seqsForAlign
   .combine ( treesForAlignment, by:0 )
   .into { seqsAndTreesSTD; seqsAndTreesDPA }
-
 
 Channel
   .create()
@@ -200,7 +201,7 @@ Channel
 if ( params.std_align ) {
   process std_alignment {
   
-    tag "${params.align_method}/${id}"
+    tag "${id} - ${params.align_method} - STD - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -211,7 +212,7 @@ if ( params.std_align ) {
           from seqsAndTreesSTD
 
     output:
-      set val(id), val("${params.align_method}"), val(tree_method), val("std_align"), file("${id}.${params.align_method}.std.aln") into std_alignments
+      set val(id), val("${params.align_method}"), val(tree_method), val("std_align"), val("NA"), file("${id}.${params.align_method}.std.aln") into std_alignments
 
      script:
        template "align/std_align_${params.align_method}.sh"
@@ -220,9 +221,12 @@ if ( params.std_align ) {
 else { std_alignments.close() }
 
 if ( params.dpa_align) {
+  
+  buckets_list = params.buckets
+
   process dpa_alignment {
 
-    tag "${params.align_method}/${id}"
+    tag "${id} - ${params.align_method} - DPA - ${bucket_size}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -232,8 +236,10 @@ if ( params.dpa_align) {
           file(guide_tree) \
           from seqsAndTreesDPA
 
+       each bucket_size from buckets_list
+
     output:
-      set val(id), val("${params.align_method}"), val(tree_method), val("dpa_align"), file("${id}.${params.align_method}.dpa.aln") into dpa_alignments
+      set val(id), val("${params.align_method}"), val(tree_method), val("dpa_align"), val(bucket_size), file("${id}.${params.align_method}.dpa.aln") into dpa_alignments
 
      script:
        template "align/dpa_align_${params.align_method}.sh"
@@ -251,9 +257,67 @@ std_alignments
 
 refs2
   .cross(all_alignments)
-  .map {it -> [it[0][0], it[1][1], it[1][2], it[1][3], it[1][4], it[0][1]] }
+  .map {it -> [it[0][0], it[1][1], it[1][2], it[1][3], it[1][4], it[1][5], it[0][1]] }
   .set { toEvaluate }
 
 
-// TO ADD SCORE PROCESS HERE
 
+// TO ADD SCORE PROCESS HERE
+if ( params.refs ) {
+  process evaluate {
+
+    tag "${id} - ${params.tree_method} - ${params.align_method} - ${align_type} - ${bucket_size}"
+    //publishDir "${params.output}/evaluate", mode: 'copy', overwrite: true
+
+    input:
+      set val(id), \
+          val(align_method), \
+          val(tree_method), \
+          val(align_type), \
+          val(bucket_size), \
+          file(test_alignment), \
+          file(ref_alignment) \
+          from toEvaluate
+
+    output:
+      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.sp.tsv") into spScores
+      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.tc.tsv") into tcScores
+      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.col.tsv") into colScores
+
+     script:
+     """
+       t_coffee -other_pg aln_compare \
+             -al1 ${ref_alignment} \
+             -al2 ${test_alignment} \
+            -compare_mode sp \
+            | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
+            >> "score.sp.tsv"
+
+       t_coffee -other_pg aln_compare \
+             -al1 ${ref_alignment} \
+             -al2 ${test_alignment} \
+            -compare_mode tc \
+            | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
+            >> "score.tc.tsv"
+
+       t_coffee -other_pg aln_compare \
+             -al1 ${ref_alignment} \
+             -al2 ${test_alignment} \
+            -compare_mode column \
+            | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
+            >> "score.col.tsv"
+    """
+  }
+}
+
+spScores
+    .collectFile(name:"spScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+        it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
+
+tcScores
+    .collectFile(name:"tcScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+        it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
+
+colScores
+    .collectFile(name:"colScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+        it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
