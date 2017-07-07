@@ -60,6 +60,11 @@ if( params.refs ) {
     .combine( refs, by: 0)
     .into { seqsAndRefs; seqsAndRefs2}
 }
+else { 
+    Channel
+    .empty()
+    .set { refs2 }
+}
 
 // Channels for user provided trees [OPTIONAL]
 if ( params.trees ) {
@@ -101,7 +106,7 @@ else { error "Error in determining running mode, see README." }
 //
 // IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
 //
-if( params.refs ) {
+if ( params.refs ) {
   process combine_seqs {
 
     tag "${id}"
@@ -308,16 +313,17 @@ if ( params.refs ) {
             >> "score.col.tsv"
     """
   }
-}
+ 
 
-spScores
+  spScores
     .collectFile(name:"spScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
-tcScores
+  tcScores
     .collectFile(name:"tcScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
-colScores
+  colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
+}
