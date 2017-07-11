@@ -19,7 +19,10 @@ RUN apt-get update \
 		curl \
                 libargtable2-0 \
                 ca-certificates \
-                libpng12-0
+                libpng12-0 \
+                python-biopython \
+                python-numpy \ 
+                ruby
                 
 
 # install argtable 2
