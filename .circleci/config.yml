@@ -1,0 +1,9 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/build
+    steps:
+      - checkout
+      - run: curl -fsSL get.nextflow.io | bash
+      - run: ./nextflow run . -with-docker
