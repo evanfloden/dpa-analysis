@@ -27,19 +27,21 @@
  * Cedric Notredame 
  */
 
-log.info "D P A   A n a l y s i s  ~  version 0.1"
-log.info "====================================="
-log.info "Name                                                  : ${params.name}"
-log.info "Input sequences (FASTA)                               : ${params.seqs}"
-log.info "Input references (Aligned FASTA)                      : ${params.refs}"
-log.info "Input trees (NEWICK)                                  : ${params.trees}"
-log.info "Output directory (DIRECTORY)                          : ${params.output}"
-log.info "Alignment method [CLUSTALO|MAFFT|UPP]                 : ${params.align_method}"
-log.info "Tree method [CLUSTALO|MAFFT|CLUSTALO_RND|MAFFT_RND]   : ${params.tree_method}"
-log.info "Perform standard alignments                           : ${params.std_align}"
-log.info "Perform double progressive alignments (DPA)           : ${params.dpa_align}"
-log.info "Bucket Sizes for DPA                                  : ${params.buckets}"
-log.info "\n"
+log.info """\
+         D P A   A n a l y s i s  ~  version 0.1"
+         ======================================="
+         Name                                                  : ${params.name}
+         Input sequences (FASTA)                               : ${params.seqs}
+         Input references (Aligned FASTA)                      : ${params.refs}
+         Input trees (NEWICK)                                  : ${params.trees}
+         Output directory (DIRECTORY)                          : ${params.output}
+         Alignment method [CLUSTALO|MAFFT|UPP]                 : ${params.align_method}
+         Tree method [CLUSTALO|MAFFT|CLUSTALO_RND|MAFFT_RND]   : ${params.tree_method}
+         Perform standard alignments                           : ${params.std_align}
+         Perform double progressive alignments (DPA)           : ${params.dpa_align}
+         Bucket Sizes for DPA                                  : ${params.buckets}
+         """
+         .stripIndent()
 
 
 // Channels for sequences [REQUIRED]
@@ -78,29 +80,24 @@ if ( params.trees ) {
 // EXPLICITLY STATE WHICH MODE WE ARE RUNNING IN BASED ON INPUT ARGUMENTS
 // 
 
-def mode = 0
-
 // Mode 1: Basic Alignment Mode
-if ( params.seqs && !params.refs && !params.trees ) {
-  mode = 1;
+if ( params.seqs && !params.refs && !params.trees ) 
   log.info "Running in Mode 1: Basic Alignment\n"
-}
+  
 // Mode 2: Reference Alignment Mode
-else if ( params.seqs && params.refs && !params.trees ) {
-  mode = 2;
+else if ( params.seqs && params.refs && !params.trees ) 
   log.info "Running in Mode 2: Reference Alignment Mode\n"
-}
+
 // Mode 3: Custom Guide Tree Alignment Mode
-else if ( params.seqs && !params.refs && params.trees ) {
-  mode = 3;
+else if ( params.seqs && !params.refs && params.trees ) 
   log.info "Running in Mode 3: Custom Guide Tree Alignment Mode\n"
-}
+
 // Mode 4: Reference Alignment Mode with Custom Guide Tree
-else if ( params.seqs && params.refs && params.trees ) {
-  mode = 4;
+else if ( params.seqs && params.refs && params.trees ) 
   log.info "Running in Mode 4: Reference Alignment Mode with Custom Guide Tree\n"
-}
-else { error "Error in determining running mode, see README." }
+
+else  
+    error "Error in determining running mode, see README."
 
 
 //
