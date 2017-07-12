@@ -190,16 +190,8 @@ seqsForAlign
   .combine ( treesForAlignment, by:0 )
   .into { seqsAndTreesSTD; seqsAndTreesDPA }
 
-Channel
-  .create()
-  .set { std_alignments }
 
-Channel
-  .create()
-  .set { dpa_alignments }
-
-if ( params.std_align ) {
-  process std_alignment {
+process std_alignment {
   
     tag "${id} - ${params.align_method} - STD - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
@@ -211,20 +203,18 @@ if ( params.std_align ) {
           file(guide_tree) \
           from seqsAndTreesSTD
 
+    when:
+    params.std_align
+
     output:
       set val(id), val("${params.align_method}"), val(tree_method), val("std_align"), val("NA"), file("${id}.${params.align_method}.std.aln") into std_alignments
 
      script:
        template "align/std_align_${params.align_method}.sh"
-  }
 }
-else { std_alignments.close() }
 
-if ( params.dpa_align) {
-  
-  buckets_list = params.buckets
 
-  process dpa_alignment {
+process dpa_alignment {
 
     tag "${id} - ${params.align_method} - DPA - ${bucket_size}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
@@ -236,23 +226,25 @@ if ( params.dpa_align) {
           file(guide_tree) \
           from seqsAndTreesDPA
 
-       each bucket_size from buckets_list
+       each bucket_size from params.buckets
 
     output:
       set val(id), val("${params.align_method}"), val(tree_method), val("dpa_align"), val(bucket_size), file("${id}.${params.align_method}.dpa.aln") into dpa_alignments
 
-     script:
+    when:
+    params.dpa_align
+
+    script:
        template "align/dpa_align_${params.align_method}.sh"
-  }
 }
-else { std_alignments.close() }
+
 
 //
 // Create a channel that combines references and alignments to be evaluated.
 //
 
 std_alignments
-  .concat(dpa_alignments)
+  .mix( dpa_alignments )
   .set { all_alignments }
 
 refs2
@@ -263,7 +255,6 @@ refs2
 
 
 // TO ADD SCORE PROCESS HERE
-if ( params.refs ) {
   process evaluate {
 
     tag "${id} - ${params.tree_method} - ${params.align_method} - ${align_type} - ${bucket_size}"
@@ -283,6 +274,9 @@ if ( params.refs ) {
       set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.sp.tsv") into spScores
       set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.tc.tsv") into tcScores
       set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.col.tsv") into colScores
+
+    when:
+    params.refs
 
      script:
      """
@@ -307,18 +301,18 @@ if ( params.refs ) {
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
             >> "score.col.tsv"
     """
-  }
+}
  
 
-  spScores
+spScores
     .collectFile(name:"spScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
-  tcScores
+tcScores
     .collectFile(name:"tcScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
-  colScores
+colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
-}
+
