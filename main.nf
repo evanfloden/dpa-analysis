@@ -27,6 +27,42 @@
  * Cedric Notredame 
  */
 
+/*
+ * defaults parameter definitions
+ */
+
+// Name
+params.name = "DPA_Analysis"
+
+// input sequences to align [FASTA]
+params.seqs = "$baseDir/tutorial/seqs/*.fa"
+
+// input reference sequences aligned [Aligned FASTA]
+params.refs = "$baseDir/tutorial/refs/*.ref"
+
+// input guide tree(s) [NEWICK]
+//trees = "$baseDir/tutorial/trees/*.dnd"
+params.trees = false
+
+// output directory [DIRECTORY]
+params.output = "$baseDir/results"
+
+// alignment method [CLUSTALO | MAFFT | UPP]
+params.align_method = "CLUSTALO"
+
+// tree method [CLUSTALO | MAFFT | RANDOM]
+params.tree_method = "CLUSTALO"
+
+// create dpa alignments [BOOL]
+params.dpa_align = true
+
+// use standard alingments [BOOL]
+params.std_align = true
+
+// bucket sizes for DPA [COMMA SEPARATED VALUES]
+params.buckets = '50,100,200,500'
+
+
 log.info """\
          D P A   A n a l y s i s  ~  version 0.1"
          ======================================="
@@ -85,13 +121,13 @@ if( params.refs ) {
     .into { refs; refs2 }
 
   seqs2
-    .combine(refs, by: 0)
+    .combine( refs, by: 0 )
     .set { seqsAndRefs }
+
+  Channel.empty().set { seqs3 }  // <-- THIS MAY NOT BE NEEDED -- NEEDS TO BE REVIEWED
 }
 else { 
-    Channel
-    .empty()
-    .into { refs2; seqsAndRefs }
+    Channel.empty().into { refs2; seqsAndRefs }
 }
 
 // Channels for user provided trees [OPTIONAL]
@@ -141,15 +177,8 @@ process combine_seqs {
 }
 
 
-if ( params.refs ) {
-  Channel
-    .empty()
-    .set { seqs3 }
-}
-
-
 seqsAndRefsComplete
-  .concat ( seqs3 )
+  .mix ( seqs3 )
   .into { seqsForAlign; seqsForTrees }
 
 
@@ -175,7 +204,7 @@ process guide_trees {
          into treesGenerated
 
    when:
-   !params.trees
+     !params.trees
 
    script:
      template "tree/generate_tree_${params.tree_method}.sh"
@@ -183,11 +212,8 @@ process guide_trees {
 
 
 treesGenerated
-  .mix( treesProvided )
-  .set { treesForAlignment }
-
-seqsForAlign
-  .combine ( treesForAlignment, by:0 )
+  .mix ( treesProvided )
+  .combine ( seqsForAlign, by:0 )
   .into { seqsAndTreesSTD; seqsAndTreesDPA }
 
 
@@ -198,13 +224,13 @@ process std_alignment {
 
     input:
       set val(id), \
-          file(seqs), \
           val(tree_method), \
-          file(guide_tree) \
+          file(guide_tree), \
+          file(seqs) \
           from seqsAndTreesSTD
 
     when:
-    params.std_align
+      params.std_align
 
     output:
       set val(id), val("${params.align_method}"), val(tree_method), val("std_align"), val("NA"), file("${id}.${params.align_method}.std.aln") into std_alignments
@@ -221,18 +247,18 @@ process dpa_alignment {
 
     input:
       set val(id), \
-          file(seqs), \
           val(tree_method), \
-          file(guide_tree) \
+          file(guide_tree), \
+          file(seqs) \
           from seqsAndTreesDPA
 
-       each bucket_size from params.buckets
+       each bucket_size from params.buckets.tokenize(',')
 
     output:
       set val(id), val("${params.align_method}"), val(tree_method), val("dpa_align"), val(bucket_size), file("${id}.${params.align_method}.dpa.aln") into dpa_alignments
 
     when:
-    params.dpa_align
+      params.dpa_align
 
     script:
        template "align/dpa_align_${params.align_method}.sh"
@@ -244,18 +270,18 @@ process dpa_alignment {
 //
 
 std_alignments
-  .mix( dpa_alignments )
+  .mix ( dpa_alignments )
   .set { all_alignments }
 
 refs2
-  .cross(all_alignments)
-  .map {it -> [it[0][0], it[1][1], it[1][2], it[1][3], it[1][4], it[1][5], it[0][1]] }
+  .cross ( all_alignments )
+  .map { it -> [it[0][0], it[1][1], it[1][2], it[1][3], it[1][4], it[1][5], it[0][1]] }
   .set { toEvaluate }
 
 
 
 // TO ADD SCORE PROCESS HERE
-  process evaluate {
+process evaluate {
 
     tag "${id} - ${params.tree_method} - ${params.align_method} - ${align_type} - ${bucket_size}"
     //publishDir "${params.output}/evaluate", mode: 'copy', overwrite: true
@@ -276,7 +302,7 @@ refs2
       set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.col.tsv") into colScores
 
     when:
-    params.refs
+      params.refs
 
      script:
      """
