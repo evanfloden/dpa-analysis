@@ -44,6 +44,32 @@ log.info """\
          .stripIndent()
 
 
+//
+// EXPLICITLY STATE WHICH MODE WE ARE RUNNING IN BASED ON INPUT ARGUMENTS
+// 
+if( !params.seqs ) 
+    error "Parameter `--seqs` is required, see README."
+
+// Mode 1: Basic Alignment Mode
+if ( !params.refs && !params.trees ) 
+  log.info "Running in Mode 1: Basic Alignment\n"
+  
+// Mode 2: Reference Alignment Mode
+else if ( params.refs && !params.trees ) 
+  log.info "Running in Mode 2: Reference Alignment Mode\n"
+
+// Mode 3: Custom Guide Tree Alignment Mode
+else if ( !params.refs && params.trees ) 
+  log.info "Running in Mode 3: Custom Guide Tree Alignment Mode\n"
+
+// Mode 4: Reference Alignment Mode with Custom Guide Tree
+else if ( params.refs && params.trees ) 
+  log.info "Running in Mode 4: Reference Alignment Mode with Custom Guide Tree\n"
+
+else  
+    error "Error in determining running mode, see README."
+
+
 // Channels for sequences [REQUIRED]
 Channel
   .fromPath(params.seqs)
@@ -75,29 +101,6 @@ if ( params.trees ) {
     .map { item -> [ item.baseName, "USER_PROVIDED", item] }
     .into { trees; trees2 }
 }
-
-//
-// EXPLICITLY STATE WHICH MODE WE ARE RUNNING IN BASED ON INPUT ARGUMENTS
-// 
-
-// Mode 1: Basic Alignment Mode
-if ( params.seqs && !params.refs && !params.trees ) 
-  log.info "Running in Mode 1: Basic Alignment\n"
-  
-// Mode 2: Reference Alignment Mode
-else if ( params.seqs && params.refs && !params.trees ) 
-  log.info "Running in Mode 2: Reference Alignment Mode\n"
-
-// Mode 3: Custom Guide Tree Alignment Mode
-else if ( params.seqs && !params.refs && params.trees ) 
-  log.info "Running in Mode 3: Custom Guide Tree Alignment Mode\n"
-
-// Mode 4: Reference Alignment Mode with Custom Guide Tree
-else if ( params.seqs && params.refs && params.trees ) 
-  log.info "Running in Mode 4: Reference Alignment Mode with Custom Guide Tree\n"
-
-else  
-    error "Error in determining running mode, see README."
 
 
 //
