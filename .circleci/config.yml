@@ -8,5 +8,4 @@ jobs:
       - run: curl -fsSL get.nextflow.io | bash
       - run: ./nextflow run . -with-docker --refs=false --trees=false
       - run: ./nextflow run . -with-docker --trees=false
-      - run: ./nextflow run . -with-docker --refs=false --trees='./tutorial/trees/*.dnd'
       - run: ./nextflow run . -with-docker --trees='./tutorial/trees/*.dnd'
