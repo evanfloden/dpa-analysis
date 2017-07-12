@@ -85,8 +85,8 @@ if( params.refs ) {
     .into { refs; refs2 }
 
   seqs2
-    .combine( refs, by: 0)
-    .into { seqsAndRefs; seqsAndRefs2}
+    .combine(refs, by: 0)
+    .set { seqsAndRefs }
 }
 else { 
     Channel
@@ -116,7 +116,7 @@ if ( params.refs ) {
     set val(id), \
         file(sequences), \
         file(references) \
-        from seqsAndRefs2
+        from seqsAndRefs
 
     output:
     set val(id), \
