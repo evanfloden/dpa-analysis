@@ -24,7 +24,7 @@ command line.
 
 There are 4 running modes which are determined based on the provided input files.
 
-Each mode can be run with the standard MSA proceedure, with the DPA proceesure or with both (see `--dpa_align` and --`std_align`).
+Each mode can be run with the standard MSA proceedure, with the DPA proceesure or with both (see `--dpa_align` and `--std_align`).
 
 #### 1: Basic Alignment Mode
 
