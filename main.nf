@@ -91,7 +91,7 @@ if( params.refs ) {
 else { 
     Channel
     .empty()
-    .set { refs2 }
+    .into { refs2; seqsAndRefs }
 }
 
 // Channels for user provided trees [OPTIONAL]
@@ -106,37 +106,37 @@ if ( params.trees ) {
 //
 // IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
 //
-if ( params.refs ) {
-  process combine_seqs {
 
-    tag "${id}"
-    publishDir "${params.output}/sequences", mode: 'copy', overwrite: true
- 
-    input:
-    set val(id), \
-        file(sequences), \
-        file(references) \
-        from seqsAndRefs
+process combine_seqs {
 
-    output:
-    set val(id), \
-        file("shuffledCompleteSequences.fa") \
-        into seqsAndRefsComplete
+  tag "${id}"
+  publishDir "${params.output}/sequences", mode: 'copy', overwrite: true
 
-    script:
-      """
-      # CREATE A FASTA FILE CONTAINING ALL SEQUENCES (SEQS + REFS)
-      t_coffee -other_pg seq_reformat -in ${references} -output fasta_seq -out refs.tmp.fa
-      t_coffee -other_pg seq_reformat -in ${sequences} -output fasta_seq -out seqs.tmp.fa
+  input:
+  set val(id), \
+      file(sequences), \
+      file(references) \
+      from seqsAndRefs
 
-      cat refs.tmp.fa > completeSeqs.fa
-      cat seqs.tmp.fa >> completeSeqs.fa
+  output:
+  set val(id), \
+      file("shuffledCompleteSequences.fa") \
+      into seqsAndRefsComplete
 
-      # SHUFFLE ORDER OF SEQUENCES
-      t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
-      """
-  }
+  script:
+    """
+    # CREATE A FASTA FILE CONTAINING ALL SEQUENCES (SEQS + REFS)
+    t_coffee -other_pg seq_reformat -in ${references} -output fasta_seq -out refs.tmp.fa
+    t_coffee -other_pg seq_reformat -in ${sequences} -output fasta_seq -out seqs.tmp.fa
+
+    cat refs.tmp.fa > completeSeqs.fa
+    cat seqs.tmp.fa >> completeSeqs.fa
+
+    # SHUFFLE ORDER OF SEQUENCES
+    t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
+    """
 }
+
 
 if ( params.refs ) {
   Channel
@@ -144,11 +144,6 @@ if ( params.refs ) {
     .set { seqs3 }
 }
 
-if ( !params.refs ) {
-  Channel
-    .empty()
-    .set { seqsAndRefsComplete }
-}
 
 seqsAndRefsComplete
   .concat ( seqs3 )
