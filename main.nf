@@ -99,7 +99,10 @@ if ( params.trees ) {
   Channel
     .fromPath(params.trees)
     .map { item -> [ item.baseName, "USER_PROVIDED", item] }
-    .into { trees; trees2 }
+    .set { trees2 }
+}
+else {
+    Channel.empty().set { trees2 }
 }
 
 
@@ -177,11 +180,8 @@ if ( params.trees ) {
     .empty()
     .set { trees1 }
 }
-if ( !params.trees ) {
-  Channel
-    .empty()  
-    .set { trees2 }
-}
+
+
 trees1
   .concat ( trees2 )
   .set { treesForAlignment }
