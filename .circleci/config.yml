@@ -6,4 +6,11 @@ jobs:
     steps:
       - checkout
       - run: curl -fsSL get.nextflow.io | bash
-      - run: ./nextflow run . -with-docker
+      - run: ./nextflow run . -with-docker --refs=false --trees=false
+  build:
+    machine: true
+    working_directory: ~/build
+    steps:
+      - checkout
+      - run: curl -fsSL get.nextflow.io | bash
+      - run: ./nextflow run . -with-docker --trees=false

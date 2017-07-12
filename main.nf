@@ -233,7 +233,11 @@ process std_alignment {
       params.std_align
 
     output:
-      set val(id), val("${params.align_method}"), val(tree_method), val("std_align"), val("NA"), file("${id}.${params.align_method}.std.aln") into std_alignments
+      set val(id), \
+      val("${params.align_method}"), \
+      val(tree_method), val("std_align"), \
+      val("NA"), file("${id}.${params.align_method}.std.aln") \
+      into std_alignments
 
      script:
        template "align/std_align_${params.align_method}.sh"
@@ -255,7 +259,13 @@ process dpa_alignment {
        each bucket_size from params.buckets.tokenize(',')
 
     output:
-      set val(id), val("${params.align_method}"), val(tree_method), val("dpa_align"), val(bucket_size), file("${id}.${params.align_method}.dpa.aln") into dpa_alignments
+      set val(id), \
+      val("${params.align_method}"), \
+      val(tree_method), \
+      val("dpa_align"), \
+      val(bucket_size), \
+      file("${id}.${params.align_method}.dpa.aln") \
+      into dpa_alignments
 
     when:
       params.dpa_align
@@ -279,12 +289,9 @@ refs2
   .set { toEvaluate }
 
 
-
-// TO ADD SCORE PROCESS HERE
 process evaluate {
 
     tag "${id} - ${params.tree_method} - ${params.align_method} - ${align_type} - ${bucket_size}"
-    //publishDir "${params.output}/evaluate", mode: 'copy', overwrite: true
 
     input:
       set val(id), \
@@ -297,9 +304,20 @@ process evaluate {
           from toEvaluate
 
     output:
-      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.sp.tsv") into spScores
-      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.tc.tsv") into tcScores
-      set val(id), val(tree_method), val(align_method), val(align_type), val(bucket_size), file("score.col.tsv") into colScores
+      set val(id), val(tree_method), \
+          val(align_method), val(align_type), \
+          val(bucket_size), file("score.sp.tsv") \
+          into spScores
+
+      set val(id), val(tree_method), \
+          val(align_method), val(align_type), \
+          val(bucket_size), file("score.tc.tsv") \
+          into tcScores
+
+      set val(id), val(tree_method), \
+          val(align_method), val(align_type), \
+          val(bucket_size), file("score.col.tsv") \
+          into colScores
 
     when:
       params.refs
