@@ -99,10 +99,10 @@ if ( params.trees ) {
   Channel
     .fromPath(params.trees)
     .map { item -> [ item.baseName, "USER_PROVIDED", item] }
-    .set { trees2 }
+    .set { treesProvided }
 }
 else {
-    Channel.empty().set { trees2 }
+    Channel.empty().set { treesProvided }
 }
 
 
@@ -152,38 +152,38 @@ seqsAndRefsComplete
   .concat ( seqs3 )
   .into { seqsForAlign; seqsForTrees }
 
-// IF GUIDE TREES ARE NOT PROVIDED, GENERATE GUIDE TREES USING "--tree_method"
-if (! params.trees ) {
-  process guide_trees {                       
 
-     tag "${params.tree_method}/${id}"
-     publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
+/*
+ * GENERATE GUIDE TREES USING "--tree_method"
+ *
+ * NOTE: THIS IS ONLY IF GUIDE TREES ARE NOT PROVIDED BY THE USER
+ * BY USING THE `--trees` PARAMETER
+ */
+process guide_trees {
+   tag "${params.tree_method}/${id}"
+   publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
 
-     input:
-       set val(id), \
-           file(seqs) \
-           from seqsForTrees
+   input:
+     set val(id), \
+         file(seqs) \
+         from seqsForTrees
 
-     output:
-       set val(id), \
-           val({params.tree_method}), \
-           file("${id}.${params.tree_method}.dnd") \
-           into trees1
+   output:
+     set val(id), \
+         val({params.tree_method}), \
+         file("${id}.${params.tree_method}.dnd") \
+         into treesGenerated
 
-     script:
-       template "tree/generate_tree_${params.tree_method}.sh"
-  }
-}        
+   when:
+   !params.trees
 
-if ( params.trees ) {
-  Channel
-    .empty()
-    .set { trees1 }
+   script:
+     template "tree/generate_tree_${params.tree_method}.sh"
 }
 
 
-trees1
-  .concat ( trees2 )
+treesGenerated
+  .mix( treesProvided )
   .set { treesForAlignment }
 
 seqsForAlign
