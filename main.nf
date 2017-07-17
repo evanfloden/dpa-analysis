@@ -159,7 +159,7 @@ process combine_seqs {
 
   output:
   set val(id), \
-      file("shuffledCompleteSequences.fa") \
+      file("seqsFinal.fa") \
       into seqsAndRefsComplete
 
   script:
@@ -173,6 +173,9 @@ process combine_seqs {
 
     # SHUFFLE ORDER OF SEQUENCES
     t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
+ 
+    sed '/^\\s*\$/d' shuffledCompleteSequences.fa > seqsFinal.fa
+
     """
 }
 
