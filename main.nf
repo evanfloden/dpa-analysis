@@ -47,20 +47,32 @@ params.trees = false
 // output directory [DIRECTORY]
 params.output = "$baseDir/results"
 
-// alignment method [CLUSTALO | MAFFT | UPP]
-params.align_method = "CLUSTALO"
+// alignment method:  [ CLUSTALO,
+//                      MAFFT,
+//                      MAFFT-GINSI,
+//                      PROBCONS,
+//                      MSAPROB,
+//                      UPP ]
+params.align_method = ["CLUSTALO","MAFFT"]
 
-// tree method [CLUSTALO | MAFFT | RANDOM]
+// tree method: [ CLUSTALO,
+//                MAFFT, 
+//                MAFFT-PARTTREE,
+//                PROBCONS,
+//                MSAPROB ]
 params.tree_method = "CLUSTALO"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
 
-// use standard alingments [BOOL]
+// create standard alignments [BOOL]
 params.std_align = true
 
+// create default alignments [BOOL]
+params.default_align = true
+
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100,200,500'
+params.buckets = '50,250,1000,5000'
 
 
 log.info """\
@@ -71,8 +83,9 @@ log.info """\
          Input references (Aligned FASTA)                      : ${params.refs}
          Input trees (NEWICK)                                  : ${params.trees}
          Output directory (DIRECTORY)                          : ${params.output}
-         Alignment method [CLUSTALO|MAFFT|UPP]                 : ${params.align_method}
+         Alignment methods [CLUSTALO|MAFFT]                    : ${params.align_method}
          Tree method [CLUSTALO|MAFFT|CLUSTALO_RND|MAFFT_RND]   : ${params.tree_method}
+         Perform default alignments                            : ${params.default_align}
          Perform standard alignments                           : ${params.std_align}
          Perform double progressive alignments (DPA)           : ${params.dpa_align}
          Bucket Sizes for DPA                                  : ${params.buckets}
@@ -110,6 +123,7 @@ else
 Channel
   .fromPath(params.seqs)
   .ifEmpty{ error "No files found in ${params.seqs}"}
+  .view()
   .map { item -> [ item.baseName, item] }
   .into { seqs; seqs2; seqs3  }
 
@@ -141,6 +155,8 @@ else {
     Channel.empty().set { treesProvided }
 }
 
+tree_methods = params.tree_method
+align_methods = params.align_method
 
 //
 // IF REFERENCE ALIGNMENT IS PRESENT THEN COMBINE SEQS INTO RANDOM ORDERED FASTA
@@ -150,6 +166,8 @@ process combine_seqs {
 
   tag "${id}"
   publishDir "${params.output}/sequences", mode: 'copy', overwrite: true
+  memory { 64.GB * task.attempt }
+  errorStrategy 'retry' 
 
   input:
   set val(id), \
@@ -166,7 +184,7 @@ process combine_seqs {
     """
     # CREATE A FASTA FILE CONTAINING ALL SEQUENCES (SEQS + REFS)
     t_coffee -other_pg seq_reformat -in ${references} -output fasta_seq -out refs.tmp.fa
-    t_coffee -other_pg seq_reformat -in ${sequences} -output fasta_seq -out seqs.tmp.fa
+    esl-reformat fasta ${sequences} > seqs.tmp.fa
 
     cat refs.tmp.fa > completeSeqs.fa
     cat seqs.tmp.fa >> completeSeqs.fa
@@ -182,7 +200,7 @@ process combine_seqs {
 
 seqsAndRefsComplete
   .mix ( seqs3 )
-  .into { seqsForAlign; seqsForTrees }
+  .into { seqsForAlign; seqsForDefaultAlign; seqsForTrees }
 
 
 /*
@@ -191,26 +209,30 @@ seqsAndRefsComplete
  * NOTE: THIS IS ONLY IF GUIDE TREES ARE NOT PROVIDED BY THE USER
  * BY USING THE `--trees` PARAMETER
  */
+
 process guide_trees {
-   tag "${params.tree_method}/${id}"
+   tag "${tree_method}/${id}"
    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
+   memory { 64.GB * task.attempt }
+   errorStrategy 'retry'
 
    input:
      set val(id), \
          file(seqs) \
          from seqsForTrees
+     each tree_method from tree_methods.tokenize(',') 
 
    output:
      set val(id), \
-         val({params.tree_method}), \
-         file("${id}.${params.tree_method}.dnd") \
+         val(tree_method), \
+         file("${id}.${tree_method}.dnd") \
          into treesGenerated
 
    when:
      !params.trees
 
    script:
-     template "tree/generate_tree_${params.tree_method}.sh"
+     template "tree/generate_tree_${tree_method}.sh"
 }
 
 
@@ -222,8 +244,10 @@ treesGenerated
 
 process std_alignment {
   
-    tag "${id} - ${params.align_method} - STD - NA"
+    tag "${id} - ${align_method} - STD - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
+    memory { 64.GB * task.attempt }
+    errorStrategy 'retry'
 
     input:
       set val(id), \
@@ -232,25 +256,29 @@ process std_alignment {
           file(seqs) \
           from seqsAndTreesSTD
 
+      each align_method from align_methods.tokenize(',') 
+
     when:
       params.std_align
 
     output:
       set val(id), \
-      val("${params.align_method}"), \
+      val("${align_method}"), \
       val(tree_method), val("std_align"), \
-      val("NA"), file("${id}.${params.align_method}.std.aln") \
+      val("NA"), file("${id}.${align_method}.std.aln") \
       into std_alignments
 
      script:
-       template "align/std_align_${params.align_method}.sh"
+       template "std_align/std_align_${align_method}.sh"
 }
 
 
 process dpa_alignment {
 
-    tag "${id} - ${params.align_method} - DPA - ${bucket_size}"
+    tag "${id} - ${align_method} - DPA - ${bucket_size}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
+    memory { 64.GB * task.attempt }
+    errorStrategy 'retry'
 
     input:
       set val(id), \
@@ -259,24 +287,53 @@ process dpa_alignment {
           file(seqs) \
           from seqsAndTreesDPA
 
-       each bucket_size from params.buckets.tokenize(',')
+      each bucket_size from params.buckets.tokenize(',')
+       
+      each align_method from align_methods.tokenize(',')   
 
     output:
       set val(id), \
-      val("${params.align_method}"), \
+      val("${align_method}"), \
       val(tree_method), \
       val("dpa_align"), \
       val(bucket_size), \
-      file("${id}.${params.align_method}.dpa.aln") \
+      file("${id}.${align_method}.dpa.aln") \
       into dpa_alignments
 
     when:
       params.dpa_align
 
     script:
-       template "align/dpa_align_${params.align_method}.sh"
+       template "dpa_align/dpa_align_${align_method}.sh"
 }
 
+process default_alignment {
+
+    tag "${id} - ${align_method} - DEFAULT - NA"
+    publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
+    memory { 64.GB * task.attempt }
+    errorStrategy 'retry'
+
+    input:
+      set val(id), \
+          file(seqs) \
+          from seqsForDefaultAlign
+
+      each align_method from align_methods.tokenize(',') 
+
+    when:
+      params.default_align
+
+    output:
+      set val(id), \
+      val("${align_method}"), \
+      val("DEFAULT"), val("default_align"), \
+      val("NA"), file("${id}.${align_method}.default.aln") \
+      into default_alignments
+
+     script:
+       template "default_align/default_align_${align_method}.sh"
+}
 
 //
 // Create a channel that combines references and alignments to be evaluated.
@@ -284,6 +341,7 @@ process dpa_alignment {
 
 std_alignments
   .mix ( dpa_alignments )
+  .mix (default_alignments )
   .set { all_alignments }
 
 refs2
@@ -294,7 +352,9 @@ refs2
 
 process evaluate {
 
-    tag "${id} - ${params.tree_method} - ${params.align_method} - ${align_type} - ${bucket_size}"
+    tag "${id} - ${tree_method} - ${align_method} - ${align_type} - ${bucket_size}"
+    memory { 128.GB * task.attempt }
+    errorStrategy 'retry'
 
     input:
       set val(id), \
@@ -352,14 +412,14 @@ process evaluate {
  
 
 spScores
-    .collectFile(name:"spScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+    .collectFile(name:"spScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
 tcScores
-    .collectFile(name:"tcScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+    .collectFile(name:"tcScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
 colScores
-    .collectFile(name:"colScores.${workflow.runName}.csv", sort:{ it[0] }, newLine:true, storeDir: "$params.output/scores" ) {
+    .collectFile(name:"colScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 

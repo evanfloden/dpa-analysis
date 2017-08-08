@@ -1,10 +1,14 @@
-NR == FNR {
-  rep[$1] = $2
-  next
-} 
+NR==FNR { 
+  a[$1]=$2; 
+  next 
+}
 
 {
-  for (key in rep)
-    gsub(key, rep[key])
-  print
-}
+  for(i in a) { 
+      for(x=1;x<=NF;x++) {
+          $x=(i==$x)?a[i]:$x
+          }
+      }
+}1
+
+

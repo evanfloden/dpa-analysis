@@ -66,25 +66,6 @@ ENV MAFFT_BINARIES=""
 RUN mv mafft-7.310-with-extensions mafft && \
     rm mafft-7.310-with-extensions-src.tgz
 
-# 
-# install SEPP and UPP 
-#
-RUN git clone https://github.com/smirarab/sepp.git && \
-    cd sepp && \
-    python setup.py config -c && \
-    python setup.py install 
-
-RUN mkdir pasta-code && \
-    cd pasta-code && \
-    git clone https://github.com/smirarab/pasta.git && \
-    git clone https://github.com/smirarab/sate-tools-linux.git && \
-    cd pasta && \
-    python setup.py develop --user && \ 
-    cd  /sepp && \
-    python setup.py upp -c      
-
-ENV PATH "$PATH:/pasta-code/pasta:/sepp"
-
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
@@ -93,3 +74,38 @@ RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cp t_coffee /bin/.
 
 RUN rm clustal-omega-1.2.4.tar.gz && rm argtable2-13.tar.gz
+
+# Install ProbCons
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    probcons
+
+# Install MSAProbs
+RUN wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.gz" -O msaprobs.tar.gz \
+         && tar zxf msaprobs.tar.gz
+WORKDIR /MSAProbs-0.9.7/MSAProbs
+RUN make \
+       && cp msaprobs /usr/bin
+WORKDIR /
+
+
+# 
+# install SEPP and UPP 
+#
+RUN git clone https://github.com/smirarab/sepp.git && \
+    cd sepp && \
+    python setup.py config -c && \
+    python setup.py install
+
+RUN mkdir pasta-code && \
+    cd pasta-code && \
+    git clone https://github.com/smirarab/pasta.git && \
+    git clone https://github.com/smirarab/sate-tools-linux.git && \
+    cd pasta && \
+    python setup.py config develop --user && \
+    mkdir /root/.sepp && \
+    cd  /sepp && \
+    python setup.py config -c upp
+
+ENV PATH "$PATH:/pasta-code/pasta:/sepp"

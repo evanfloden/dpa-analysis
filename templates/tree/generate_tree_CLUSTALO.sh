@@ -1,1 +1,1 @@
-clustalo -i ${seqs} --guidetree-out ${id}.${params.tree_method}.dnd
+clustalo -i ${seqs} --guidetree-out ${id}.${tree_method}.dnd

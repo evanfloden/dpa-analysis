@@ -1,4 +1,4 @@
 clustalo --infile=${seqs} \
          --guidetree-in=${guide_tree} \
          --outfmt=fa \
-         -o ${id}.${params.align_method}.std.aln
+         -o ${id}.${align_method}.std.aln

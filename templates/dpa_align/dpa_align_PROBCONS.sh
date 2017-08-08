@@ -1,4 +1,4 @@
-t_coffee -dpa -dpa_method mafft_msa \
+t_coffee -dpa -dpa_method probcons_msa \
          -dpa_tree ${guide_tree} \
          -seq ${seqs} \
          -dpa_nseq 200 \
