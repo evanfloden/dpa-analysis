@@ -1,1 +1,1 @@
-probcons ${seqs} > ${params.align_method}.default.aln 
+probcons ${seqs} > ${id}.default.${align_method}.aln

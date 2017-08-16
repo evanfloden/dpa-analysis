@@ -123,7 +123,6 @@ else
 Channel
   .fromPath(params.seqs)
   .ifEmpty{ error "No files found in ${params.seqs}"}
-  .view()
   .map { item -> [ item.baseName, item] }
   .into { seqs; seqs2; seqs3  }
 
@@ -148,12 +147,13 @@ else {
 if ( params.trees ) {
   Channel
     .fromPath(params.trees)
-    .map { item -> [ item.baseName, "USER_PROVIDED", item] }
+    .map { item -> [ item.baseName, "USER_DEFINED", item] }
     .set { treesProvided }
 }
 else {
     Channel.empty().set { treesProvided }
 }
+
 
 tree_methods = params.tree_method
 align_methods = params.align_method
@@ -166,8 +166,10 @@ process combine_seqs {
 
   tag "${id}"
   publishDir "${params.output}/sequences", mode: 'copy', overwrite: true
-  memory { 64.GB * task.attempt }
-  errorStrategy 'retry' 
+  memory = { 2.GB * task.attempt }
+  errorStrategy = { task.attempt < 5 ? 'retry' : 'finish' }
+  maxRetries = 6
+
 
   input:
   set val(id), \
@@ -177,7 +179,7 @@ process combine_seqs {
 
   output:
   set val(id), \
-      file("seqsFinal.fa") \
+      file("${id}.shuffled_seqs_with_ref.fa") \
       into seqsAndRefsComplete
 
   script:
@@ -192,7 +194,7 @@ process combine_seqs {
     # SHUFFLE ORDER OF SEQUENCES
     t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
  
-    sed '/^\\s*\$/d' shuffledCompleteSequences.fa > seqsFinal.fa
+    sed '/^\\s*\$/d' shuffledCompleteSequences.fa > ${id}.shuffled_seqs_with_ref.fa
 
     """
 }
@@ -213,8 +215,9 @@ seqsAndRefsComplete
 process guide_trees {
    tag "${tree_method}/${id}"
    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
-   memory { 64.GB * task.attempt }
-   errorStrategy 'retry'
+   memory = { 10.GB * task.attempt }
+   errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' } 
+   maxRetries = 6
 
    input:
      set val(id), \
@@ -239,6 +242,7 @@ process guide_trees {
 treesGenerated
   .mix ( treesProvided )
   .combine ( seqsForAlign, by:0 )
+  .view()
   .into { seqsAndTreesSTD; seqsAndTreesDPA }
 
 
@@ -246,8 +250,9 @@ process std_alignment {
   
     tag "${id} - ${align_method} - STD - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory { 64.GB * task.attempt }
-    errorStrategy 'retry'
+    memory = { 10.GB * task.attempt }
+    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
+    maxRetries = 6
 
     input:
       set val(id), \
@@ -265,7 +270,7 @@ process std_alignment {
       set val(id), \
       val("${align_method}"), \
       val(tree_method), val("std_align"), \
-      val("NA"), file("${id}.${align_method}.std.aln") \
+      val("NA"), file("${id}.std.${align_method}.with.${tree_method}.tree.aln") \
       into std_alignments
 
      script:
@@ -277,8 +282,9 @@ process dpa_alignment {
 
     tag "${id} - ${align_method} - DPA - ${bucket_size}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory { 64.GB * task.attempt }
-    errorStrategy 'retry'
+    memory = { 10.GB * task.attempt }
+    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
+    maxRetries = 6
 
     input:
       set val(id), \
@@ -297,7 +303,7 @@ process dpa_alignment {
       val(tree_method), \
       val("dpa_align"), \
       val(bucket_size), \
-      file("${id}.${align_method}.dpa.aln") \
+      file("${id}.dpa_${bucket_size}.${align_method}.with.${tree_method}.tree.aln") \
       into dpa_alignments
 
     when:
@@ -311,8 +317,9 @@ process default_alignment {
 
     tag "${id} - ${align_method} - DEFAULT - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory { 64.GB * task.attempt }
-    errorStrategy 'retry'
+    memory = { 10.GB * task.attempt }
+    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
+    maxRetries = 6
 
     input:
       set val(id), \
@@ -328,7 +335,7 @@ process default_alignment {
       set val(id), \
       val("${align_method}"), \
       val("DEFAULT"), val("default_align"), \
-      val("NA"), file("${id}.${align_method}.default.aln") \
+      val("NA"), file("${id}.default.${align_method}.aln") \
       into default_alignments
 
      script:
@@ -353,8 +360,9 @@ refs2
 process evaluate {
 
     tag "${id} - ${tree_method} - ${align_method} - ${align_type} - ${bucket_size}"
-    memory { 128.GB * task.attempt }
-    errorStrategy 'retry'
+    memory = { 10.GB * task.attempt }
+    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
+    maxRetries = 6
 
     input:
       set val(id), \
