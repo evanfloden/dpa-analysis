@@ -66,13 +66,6 @@ ENV MAFFT_BINARIES=""
 RUN mv mafft-7.310-with-extensions mafft && \
     rm mafft-7.310-with-extensions-src.tgz
 
-# Install TCOFFEE
-RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
-    cd tcoffee && \
-    cd compile && \
-    make t_coffee && \
-    cp t_coffee /bin/.
-
 RUN rm clustal-omega-1.2.4.tar.gz && rm argtable2-13.tar.gz
 
 # Install ProbCons
@@ -109,3 +102,16 @@ RUN mkdir pasta-code && \
     python setup.py config -c upp
 
 ENV PATH "$PATH:/pasta-code/pasta:/sepp"
+
+# Install TCOFFEE
+RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
+    cd tcoffee && \
+    git checkout f389b558e91d0f82e7db934d9a79ce285f853a71 && \
+    cd compile && \
+    make t_coffee && \
+    cp t_coffee /bin/. 
+
+ENV CACHE_4_TCOFFEE=/tmp/tcoffee/cache
+ENV LOCKDIR_4_TCOFFEE=/tmp/tcoffee/lock
+ENV TMP_4_TCOFFEE=/tmp/tcoffee/tcf
+ENV DIR_4_TCOFFEE=/tmp/tcoffee/dir

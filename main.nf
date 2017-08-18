@@ -53,7 +53,7 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = ["CLUSTALO","MAFFT"]
+params.align_method = "CLUSTALO,MAFFT"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
@@ -166,10 +166,6 @@ process combine_seqs {
 
   tag "${id}"
   publishDir "${params.output}/sequences", mode: 'copy', overwrite: true
-  memory = { 2.GB * task.attempt }
-  errorStrategy = { task.attempt < 5 ? 'retry' : 'finish' }
-  maxRetries = 6
-
 
   input:
   set val(id), \
@@ -215,9 +211,6 @@ seqsAndRefsComplete
 process guide_trees {
    tag "${tree_method}/${id}"
    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
-   memory = { 10.GB * task.attempt }
-   errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' } 
-   maxRetries = 6
 
    input:
      set val(id), \
@@ -242,7 +235,6 @@ process guide_trees {
 treesGenerated
   .mix ( treesProvided )
   .combine ( seqsForAlign, by:0 )
-  .view()
   .into { seqsAndTreesSTD; seqsAndTreesDPA }
 
 
@@ -250,9 +242,6 @@ process std_alignment {
   
     tag "${id} - ${align_method} - STD - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory = { 10.GB * task.attempt }
-    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
-    maxRetries = 6
 
     input:
       set val(id), \
@@ -282,9 +271,6 @@ process dpa_alignment {
 
     tag "${id} - ${align_method} - DPA - ${bucket_size}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory = { 10.GB * task.attempt }
-    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
-    maxRetries = 6
 
     input:
       set val(id), \
@@ -317,9 +303,6 @@ process default_alignment {
 
     tag "${id} - ${align_method} - DEFAULT - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-    memory = { 10.GB * task.attempt }
-    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
-    maxRetries = 6
 
     input:
       set val(id), \
@@ -360,9 +343,6 @@ refs2
 process evaluate {
 
     tag "${id} - ${tree_method} - ${align_method} - ${align_type} - ${bucket_size}"
-    memory = { 10.GB * task.attempt }
-    errorStrategy = { task.attempt < 6 ? 'retry' : 'finish' }
-    maxRetries = 6
 
     input:
       set val(id), \

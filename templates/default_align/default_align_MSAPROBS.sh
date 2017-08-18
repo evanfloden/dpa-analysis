@@ -1,2 +1,2 @@
-msaprobs -o ${id}.${params.align_method}.default.aln \
+msaprobs -o ${id}.default.${align_method}.aln \
          ${seqs}

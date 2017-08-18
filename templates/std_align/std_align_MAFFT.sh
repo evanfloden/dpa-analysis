@@ -1,4 +1,2 @@
-grep '^>' ${seqs} | sed 's/>//' | awk '{ print \$0, ((NR-1))+1 }' > map.data
-awk -f ${baseDir}/bin/mapReplace.awk map.data ${guide_tree} > numberedTree.nwk
-ruby ${baseDir}/bin/newick2mafft.rb numberedTree.nwk > tree.mafft
-mafft --treein tree.mafft ${seqs} > ${id}.std.${align_method}.with.${tree_method}.tree.aln
+t_coffee -other_pg seq_reformat -in ${guide_tree} -in2 ${seqs} -action +newick2mafftnewick > -out ${id}.mafftnewick
+mafft --anysymbol --treein ${id}.maffttnewick ${seqs} > ${id}.std.${align_method}.with.${tree_method}.tree.aln

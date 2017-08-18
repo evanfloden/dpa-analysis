@@ -1,1 +1,1 @@
-ginsi ${seqs} > ${params.align_method}.default.aln
+ginsi ${seqs} > ${id}.default.${align_method}.aln
