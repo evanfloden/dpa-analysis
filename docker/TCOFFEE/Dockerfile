@@ -22,8 +22,10 @@ RUN apt-get update \
                 libpng12-0 \
                 python-biopython \
                 python-numpy \ 
-                ruby
-                
+                ruby \ 
+                python-setuptools \
+                default-jdk
+
 
 # install argtable 2
 RUN wget http://prdownloads.sourceforge.net/argtable/argtable2-13.tar.gz && \
@@ -88,25 +90,29 @@ WORKDIR /
 #
 RUN git clone https://github.com/smirarab/sepp.git && \
     cd sepp && \
-    python setup.py config -c && \
-    python setup.py install
+    git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
+    python setup.py install && \
+    python setup.py config && \
+    python setup.py develop
+
 
 RUN mkdir pasta-code && \
     cd pasta-code && \
     git clone https://github.com/smirarab/pasta.git && \
     git clone https://github.com/smirarab/sate-tools-linux.git && \
     cd pasta && \
-    python setup.py config develop --user && \
-    mkdir /root/.sepp && \
+    git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
+    python setup.py develop -user && \ 
+    export PATH=$PATH:/pasta-code/pasta:/sepp  && \
     cd  /sepp && \
-    python setup.py config -c upp
-
-ENV PATH "$PATH:/pasta-code/pasta:/sepp"
+    python setup.py upp && \
+    cd /pasta-code/pasta && \ 
+    python setup.py develop
 
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
-    git checkout f389b558e91d0f82e7db934d9a79ce285f853a71 && \
+    git checkout 391a8c0eb4b2f355cdabd92b480f422882b8d541 && \
     cd compile && \
     make t_coffee && \
     cp t_coffee /bin/. 
