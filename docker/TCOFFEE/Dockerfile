@@ -24,7 +24,8 @@ RUN apt-get update \
                 python-numpy \ 
                 ruby \ 
                 python-setuptools \
-                default-jdk
+                default-jdk \
+                libpng-dev 
 
 
 # install argtable 2
@@ -90,26 +91,46 @@ WORKDIR /
 # 
 # install SEPP and UPP 
 #
-#RUN git clone https://github.com/smirarab/sepp.git && \
-#    cd sepp && \
-#    git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
-#    python setup.py install && \
-#    python setup.py config && \
-#    python setup.py develop
+RUN git clone https://github.com/smirarab/sepp.git && \
+    cd sepp && \
+    git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
+    python setup.py install && \
+    python setup.py config && \
+    python setup.py develop
 
 
-#RUN mkdir pasta-code && \
-#    cd pasta-code && \
-#    git clone https://github.com/smirarab/pasta.git && \
-#    git clone https://github.com/smirarab/sate-tools-linux.git && \
-#    cd pasta && \
-#    git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
-#    python setup.py develop -user && \ 
-#    export PATH=$PATH:/pasta-code/pasta:/sepp  && \
-#    cd  /sepp && \
-#    python setup.py upp && \
-#    cd /pasta-code/pasta && \ 
-#    python setup.py develop
+RUN mkdir pasta-code && \
+    cd pasta-code && \
+    git clone https://github.com/smirarab/pasta.git && \
+    git clone https://github.com/smirarab/sate-tools-linux.git && \
+    cd pasta && \
+    git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
+    python setup.py develop -user && \ 
+    export PATH=$PATH:/pasta-code/pasta:/sepp  && \
+    cd  /sepp && \
+    python setup.py upp && \
+    cd /pasta-code/pasta && \ 
+    python setup.py develop
+
+RUN apt-get install -y \
+     apt-transport-https \
+     ca-certificates \
+     curl \
+     gnupg2 \
+     software-properties-common
+
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+
+RUN add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/debian \
+   $(lsb_release -cs) \
+   stable" 
+
+RUN apt-get update && \
+    apt-get install -y docker-ce
+
+RUN wget -qO- get.nextflow.io | bash && \
+    mv nextflow /bin/.
 
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
