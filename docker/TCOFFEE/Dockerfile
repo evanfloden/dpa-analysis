@@ -71,7 +71,6 @@ ENV MAFFT_BINARIES=""
 RUN mv mafft-7.310-with-extensions mafft && \
     rm mafft-7.310-with-extensions-src.tgz
 
-
 RUN rm clustal-omega-1.2.4.tar.gz && rm argtable2-13.tar.gz
 
 # Install ProbCons
@@ -98,7 +97,6 @@ RUN git clone https://github.com/smirarab/sepp.git && \
     python setup.py config && \
     python setup.py develop
 
-
 RUN mkdir pasta-code && \
     cd pasta-code && \
     git clone https://github.com/smirarab/pasta.git && \
@@ -110,32 +108,27 @@ RUN mkdir pasta-code && \
     cd  /sepp && \
     python setup.py upp && \
     cd /pasta-code/pasta && \ 
-    python setup.py develop
+    python setup.py develop &&\
+    touch /bin/upp &&\
+    chmod +x /bin/upp    
 
-RUN apt-get install -y \
-     apt-transport-https \
-     ca-certificates \
-     curl \
-     gnupg2 \
-     software-properties-common
 
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+# Install MSA
+RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
+    tar xfvz msa.tar.Z &&\
+    cd msa && \
+    make clean && \
+    make msa && \
+    rm /msa.tar.Z
 
-RUN add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable" 
+# Add mafft to the PATH
+ENV PATH "$PATH:/msa"
 
-RUN apt-get update && \
-    apt-get install -y docker-ce
-
-RUN wget -qO- get.nextflow.io | bash && \
-    mv nextflow /bin/.
 
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
-    git checkout 7a55bbbb1417a8fc888619c1f73edcaf5c9add34 && \
+    git checkout ca33a72e644c85e3e0dc8576ac92d718772d67b2 && \
     cd compile && \
     make t_coffee && \
     cp t_coffee /bin/. 
