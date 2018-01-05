@@ -54,7 +54,7 @@ RUN cd mafft-7.310-with-extensions/core/ && \
     sed -i "s/BINDIR = \$(PREFIX)\/bin/BINDIR = \/mafft\/bin/g" Makefile
 
 # Add mafft to the PATH
-ENV PATH "$PATH:/mafft/bin"
+RUN export "PATH=$PATH:/mafft/bin"
 
 # Make
 RUN cd mafft-7.310-with-extensions/core/ && \
@@ -65,7 +65,8 @@ RUN cd mafft-7.310-with-extensions/core/ && \
     chmod +x newick2mafft.rb
 
 # Needed to unset for the new MAFFT version
-ENV MAFFT_BINARIES=""
+RUN export MAFFT_BINARIES="" && \
+    cp /mafft/bin/* /bin/.
 
 # Move the folder and remove the tar
 RUN mv mafft-7.310-with-extensions mafft && \
@@ -122,7 +123,7 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
     rm /msa.tar.Z
 
 # Add mafft to the PATH
-ENV PATH "$PATH:/msa"
+RUN export PATH=$PATH:/msa
 
 
 # Install TCOFFEE
