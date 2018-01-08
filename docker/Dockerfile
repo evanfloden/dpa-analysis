@@ -72,13 +72,16 @@ RUN wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.
     rm /msaprobs.tar.gz
 
 # install UPP 
-RUN git clone https://github.com/smirarab/sepp.git && \
+RUN git clone http://github.com/smirarab/sepp.git && \
     cd sepp && \
     #git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
-    mkdir -p /tmp/lib/python2.7/site-packages/ && \
-    export PYTHONPATH=$PYTHONPATH:/tmp/lib/python2.7/site-packages/ && \
-    python setup.py config && \
-    python setup.py install --prefix=/tmp/ && \
+    mkdir -p /home/lib/python2.7/site-packages/ && \
+    export PYTHONPATH=$PYTHONPATH:/home/lib/python2.7/site-packages/ && \
+    python setup.py config -c && \
+    echo "/home/" > /sepp/home.path && \
+    sed -i "s/root/home/g" /sepp/.sepp/main.config && \
+#    sed -i "s/root/home/g" /sepp/.sepp/upp.config && \
+    python setup.py install --prefix=/home/ && \
     python setup.py develop && \
     mkdir /pasta-code && \
     cd /pasta-code && \
@@ -89,7 +92,8 @@ RUN git clone https://github.com/smirarab/sepp.git && \
     python setup.py develop -user && \ 
     export PATH=$PATH:/pasta-code/pasta:/sepp  && \
     cd  /sepp && \
-    python setup.py upp && \
+    python setup.py upp -c && \
+    sed -i "s/root/home/g" /sepp/.sepp/upp.config && \
     cd /pasta-code/pasta && \ 
     python setup.py develop
 #    touch /bin/upp &&\
