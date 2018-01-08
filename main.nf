@@ -53,7 +53,7 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO,MAFFT"
+params.align_method = "CLUSTALO,MAFFT,UPP"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
@@ -66,7 +66,7 @@ params.tree_method = "CLUSTALO"
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = true
+params.std_align = false
 
 // create default alignments [BOOL]
 params.default_align = true

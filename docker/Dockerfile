@@ -2,7 +2,6 @@ FROM debian:jessie
 MAINTAINER Evan Floden <evanfloden@gmail.com>
 
 ## Docker image for TCOFFEE DPA including all the requirements
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ed \
@@ -31,7 +30,7 @@ RUN wget http://prdownloads.sourceforge.net/argtable/argtable2-13.tar.gz && \
     ./configure && \
     make && \
     make install && \
-    rm argtable2-13.tar.gz
+    rm /argtable2-13.tar.gz
 
 # install CLUSTAL OMEGA
 RUN wget http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz && \
@@ -40,7 +39,7 @@ RUN wget http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz && \
     ./configure && \
     make && \
     make install && \
-    rm clustal-omega-1.2.4.tar.gz
+    rm /clustal-omega-1.2.4.tar.gz
 
 # install MAFFT
 RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src.tgz && \
@@ -48,7 +47,6 @@ RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src
     cd mafft-7.310-with-extensions/core/ && \
     sed -i "s/PREFIX = \/usr\/local/PREFIX = \/mafft/g" Makefile && \
     sed -i "s/BINDIR = \$(PREFIX)\/bin/BINDIR = \/mafft\/bin/g" Makefile && \
-    cd mafft-7.310-with-extensions/core/ && \
     make clean && \
     make && \
     make install && \
@@ -57,8 +55,8 @@ RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src
     export "PATH=$PATH:/mafft/bin" && \ 
     export MAFFT_BINARIES="" && \
     cp /mafft/bin/* /bin/. && \
-    mv mafft-7.310-with-extensions mafft && \
-    rm mafft-7.310-with-extensions-src.tgz
+    mv /mafft-7.310-with-extensions /mafft && \
+    rm /mafft-7.310-with-extensions-src.tgz
 
 # Install PROBCONS
 RUN apt-get update \
@@ -70,21 +68,24 @@ RUN wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.
     tar zxf msaprobs.tar.gz && \
     cd MSAProbs-0.9.7/MSAProbs && \ 
     make && \
-    cp msaprobs /usr/bin
+    cp msaprobs /usr/bin && \
+    rm /msaprobs.tar.gz
 
 # install UPP 
 RUN git clone https://github.com/smirarab/sepp.git && \
     cd sepp && \
-    git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
-    python setup.py install && \
+    #git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
+    mkdir -p /tmp/lib/python2.7/site-packages/ && \
+    export PYTHONPATH=$PYTHONPATH:/tmp/lib/python2.7/site-packages/ && \
     python setup.py config && \
+    python setup.py install --prefix=/tmp/ && \
     python setup.py develop && \
     mkdir /pasta-code && \
-    cd pasta-code && \
+    cd /pasta-code && \
     git clone https://github.com/smirarab/pasta.git && \
     git clone https://github.com/smirarab/sate-tools-linux.git && \
     cd pasta && \
-    git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
+    #git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
     python setup.py develop -user && \ 
     export PATH=$PATH:/pasta-code/pasta:/sepp  && \
     cd  /sepp && \
@@ -117,3 +118,10 @@ ENV CACHE_4_TCOFFEE=/tmp/tcoffee/cache
 ENV LOCKDIR_4_TCOFFEE=/tmp/tcoffee/lock
 ENV TMP_4_TCOFFEE=/tmp/tcoffee/tcf
 ENV DIR_4_TCOFFEE=/tmp/tcoffee/dir
+
+# Test Data
+RUN mkdir /test_data && \
+    cd test_data && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/rnasemam.fa && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/rnasemam.ref && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/rnasemam.dnd  
