@@ -19,6 +19,48 @@ By default the pipeline is executed against the provided example dataset.
 Check the *Pipeline parameters*  section below to see how enter your data on the program 
 command line.     
     
+## Alignment Methods
+
+The following alignment methods are available. 
+
+| Method | Default | Regressive | Standard | Version |
+| --- | :---:  | :---:  | :---:  | ------- |
+| CLUSTALO | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 1.2.4 |
+| MAFFT | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: |v7.310 |
+| MAFFT-GINSI |	:heavy_check_mark: |	:heavy_check_mark: |	:heavy_check_mark: |	v7.310 |
+| MAFFT-SPARSECORE | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: | v7.310 |
+| UPP |	:heavy_check_mark: |	:heavy_check_mark: |	:heavy_multiplication_x: |	4.3.4 |
+| PROBCONS | :heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x: | 1.12 |
+| MSA |	:heavy_exclamation_mark: | :heavy_exclamation_mark: | :heavy_exclamation_mark: |	2.1 |
+| MSAPROBS | :heavy_check_mark: | :heavy_check_mark: |:heavy_multiplication_x: |0.9.7 |
+| TCOFFEE |	:heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |	dev_@20180108_13:55 |
+
+## Tree Building Methods
+
+| Method | Available? | Version |
+| --- | :---:  | ------- |
+| CLUSTALO | :heavy_check_mark: | 1.2.4 |
+| MAFFT | :heavy_check_mark: | v7.310 |
+| MAFFT-PT | :heavy_check_mark: | v7.310 |
+| UPGMA (TCOFFEE) | :heavy_exclamation_mark: | dev_@20180108_13:55  |
+| NJ (TCOFFEE) |	:heavy_check_mark: |	dev_@20180108_13:55  |
+
+
+## Containers
+
+All the methods above are available in a [Docker](http://www.docker.com) image on DockerHub [here]() and the image is tested to be compatible with the [Singularity]().
+
+The container also contains test data consisting of protein sequences, reference alignments and trees in the directory `/test_data`.
+
+To launch the container interactively with Docker run:
+
+`docker run cbcrg/regressive-msa`
+
+To launch the container interactivly with Singularity run:
+
+`singularity shell docker://cbcrg/tcoffee-regressive-msa`
+
+
 
 ## Running Modes
 
