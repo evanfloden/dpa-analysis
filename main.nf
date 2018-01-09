@@ -53,14 +53,14 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO,MAFFT,UPP"
+params.align_method = "CLUSTALO,MAFFT,MAFFT-GINSI,UPP,PROBCONS,MSAPROBS,TCOFFEE"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO"
+params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT,NJ"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true

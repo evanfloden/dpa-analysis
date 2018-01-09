@@ -74,7 +74,6 @@ RUN wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.
 # install UPP 
 RUN git clone https://github.com/smirarab/sepp.git && \
     cd sepp && \
-    #git checkout 9b8cd6d13e677aa7cffee0ce4a85bbf23e6afa01 && \
     mkdir -p /tmp/lib/python2.7/site-packages/ && \
     export PYTHONPATH=$PYTHONPATH:/tmp/lib/python2.7/site-packages/ && \
     python setup.py config && \
@@ -85,16 +84,12 @@ RUN git clone https://github.com/smirarab/sepp.git && \
     git clone https://github.com/smirarab/pasta.git && \
     git clone https://github.com/smirarab/sate-tools-linux.git && \
     cd pasta && \
-    #git checkout 6d52da14f48f55c10c26c3e6ad7bc2d5646feeaf && \
     python setup.py develop -user && \ 
     export PATH=$PATH:/pasta-code/pasta:/sepp  && \
     cd  /sepp && \
     python setup.py upp && \
     cd /pasta-code/pasta && \ 
     python setup.py develop
-#    touch /bin/upp &&\
-#    chmod +x /bin/upp    
-
 
 # Install MSA
 RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
@@ -103,8 +98,8 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
     make clean && \
     make msa && \
     rm /msa.tar.Z && \
-    export PATH=$PATH:/msa
-
+    chmod +x /msa/msa && \
+    cp /msa/msa /bin/.
 
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
@@ -123,5 +118,8 @@ ENV DIR_4_TCOFFEE=/tmp/tcoffee/dir
 RUN mkdir /test_data && \
     cd test_data && \
     wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/rnasemam.fa && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/seatoxin.fa && \
     wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/rnasemam.ref && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/rnasemam.dnd  
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/seatoxin.ref && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/rnasemam.dnd && \
+    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/seatoxin.dnd 
