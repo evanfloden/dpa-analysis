@@ -7,3 +7,8 @@ jobs:
       - checkout
       - run: curl -fsSL get.nextflow.io | bash
       - run: ./nextflow run . -with-docker
+
+dependencies:
+  override:
+    - bundle install: # note the colon here
+        timeout: 2400
