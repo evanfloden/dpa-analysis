@@ -100,7 +100,7 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
     cd msa && \
     make clean && \
     make msa && \
-sh node-hp0000cn.linux.crg.es   rm /msa.tar.Z && \
+    rm /msa.tar.Z && \
     chmod +x /msa/msa && \
     cp /msa/msa /bin/.
 
