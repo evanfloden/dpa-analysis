@@ -58,7 +58,7 @@ To launch the container interactively with Docker run:
 
 To launch the container interactivly with Singularity run:
 
-`singularity shell docker://cbcrg/tcoffee-regressive-msa`
+`singularity shell docker://cbcrg/regressive-msa`
 
 
 
