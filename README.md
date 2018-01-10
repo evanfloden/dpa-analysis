@@ -48,7 +48,7 @@ The following alignment methods are available.
 
 ## Containers
 
-All the methods above are available in a [Docker](http://www.docker.com) image on DockerHub [here]() and the image is tested to be compatible with the [Singularity]().
+All the methods above are available in a [Docker](http://www.docker.com) image on DockerHub [here](https://hub.docker.com/r/cbcrg/regressive-msa/) and the image is tested to be compatible with the [Singularity](http://singularity.lbl.gov/).
 
 The container also contains test data consisting of protein sequences, reference alignments and trees in the directory `/test_data`.
 
