@@ -35,13 +35,13 @@
 params.name = "DPA_Analysis"
 
 // input sequences to align [FASTA]
-params.seqs = "$baseDir/tutorial/seqs/*.fa"
+params.seqs = "$baseDir/tutorial/seqs/seatoxin.fa"
 
 // input reference sequences aligned [Aligned FASTA]
-params.refs = "$baseDir/tutorial/refs/*.ref"
+params.refs = "$baseDir/tutorial/refs/seatoxin.ref"
 
 // input guide tree(s) [NEWICK]
-//trees = "$baseDir/tutorial/trees/*.dnd"
+//trees = "$baseDir/tutorial/trees/seatoxin.dnd"
 params.trees = false
 
 // output directory [DIRECTORY]
