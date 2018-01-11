@@ -35,13 +35,13 @@
 params.name = "DPA_Analysis"
 
 // input sequences to align [FASTA]
-params.seqs = "$baseDir/tutorial/seqs/*.fa"
+params.seqs = "$baseDir/tutorial/seqs/seatoxin.fa"
 
 // input reference sequences aligned [Aligned FASTA]
-params.refs = "$baseDir/tutorial/refs/*.ref"
+params.refs = "$baseDir/tutorial/refs/seatoxin.ref"
 
 // input guide tree(s) [NEWICK]
-//trees = "$baseDir/tutorial/trees/*.dnd"
+//trees = "$baseDir/tutorial/trees/seatoxin.dnd"
 params.trees = false
 
 // output directory [DIRECTORY]
@@ -53,20 +53,20 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO,MAFFT"
+params.align_method = "CLUSTALO,MAFFT,MAFFT-GINSI,UPP,PROBCONS,MSAPROBS,TCOFFEE"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO"
+params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT,NJ"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = true
+params.std_align = false
 
 // create default alignments [BOOL]
 params.default_align = true

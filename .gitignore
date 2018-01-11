@@ -1,3 +1,5 @@
+*.html
 work/
 results/
 .nextflow*
+report.*
