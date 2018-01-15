@@ -1,5 +1,6 @@
 # dpa-analysis
 
+[![CircleCI](https://circleci.com/gh/skptic/dpa-analysis/tree/master.svg?style=svg)](https://circleci.com/gh/skptic/dpa-analysis/tree/master)
 
 ## Quick Start
 
