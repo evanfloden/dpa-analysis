@@ -112,10 +112,9 @@ RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     make t_coffee && \
     cp t_coffee /bin/.
 
-ENV CACHE_4_TCOFFEE=/tmp/tcoffee/cache
-ENV LOCKDIR_4_TCOFFEE=/tmp/tcoffee/lock
-ENV TMP_4_TCOFFEE=/tmp/tcoffee/tcf
-ENV DIR_4_TCOFFEE=/tmp/tcoffee/dir
+ENV CACHE_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/cache'
+ENV LOCKDIR_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/lock'
+ENV TMP_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/tmp'
 
 # Test Data
 RUN mkdir /test_data && \
