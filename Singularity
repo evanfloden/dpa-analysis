@@ -70,7 +70,7 @@ MAINTAINER Evan Floden
 ##
 # install msaprobs
 ##
-  wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.gz" -O msaprobs.tar.gz \
+  wget "https://downloads.sourceforge.net/project/msaprobs/MSAProbs-0.9.7.tar.gz" -O msaprobs.tar.gz
   tar zxf msaprobs.tar.gz 
   cd MSAProbs-0.9.7/MSAProbs  
   make 
@@ -126,12 +126,13 @@ MAINTAINER Evan Floden
   cd compile
   make t_coffee
   cp t_coffee /bin/.
+  cd /
 
 ##
 # retrieve some test data
 ##
-  mkdir /test_data && \
-  cd test_data && \
+  mkdir /test_data
+  cd test_data
   wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/rnasemam.fa
   wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/seatoxin.fa
   wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/rnasemam.ref
