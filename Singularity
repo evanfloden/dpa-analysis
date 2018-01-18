@@ -22,6 +22,7 @@ MAINTAINER Evan Floden
   make
   make install
   rm /argtable2-13.tar.gz
+  cd /
 
 ##
 # install clustal omega
@@ -33,6 +34,7 @@ MAINTAINER Evan Floden
   make
   make install
   rm /clustal-omega-1.2.4.tar.gz
+  cd /
 
 ##
 # install mafft
@@ -52,6 +54,7 @@ MAINTAINER Evan Floden
   cp /mafft/bin/* /bin/.
   mv /mafft-7.310-with-extensions /mafft
   rm /mafft-7.310-with-extensions-src.tgz
+  cd /
 
 ##
 # Install probcons
