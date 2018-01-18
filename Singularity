@@ -13,12 +13,7 @@ MAINTAINER Evan Floden
       wget \
       git
 
-      apt-get install -y --no-install-recommends \ 
-      python \
-      build-essential \
-      cmake \
-      curl \
-      libargtable2-0
+      apt-get install -y --no-install-recommends python build-essential cmake curl libargtable2-0
 
       apt-get install -y --no-install-recommends \
       libpng12-0 \
