@@ -3,3 +3,4 @@ work/
 results/
 .nextflow*
 report.*
+trace.*
