@@ -14,3 +14,31 @@ join col_sorted.csv seqs_sorted.csv > col_and_numseqs.csv
 sort -k2,2 -k3,3 -k4,4 -k5,5n -k7,7n col_and_numseqs.csv > colResults.csv
 
 rm *_sorted.csv *_and_numseqs.csv
+
+echo $(IFS=$'\n'; 
+    for i in `cat spResults.csv | cut -f 2,3,4,5 -d " " | sort -u`;
+    do
+        echo $(echo $i; grep $(echo "$i ") spResults.csv | cut -f6 -d " "; echo ",") ; 
+    done) > spResultsOrdered.csv
+tr , '\n' < spResultsOrdered.csv > spResultsOrderedTranspose.csv
+sed -i 's/^ *//' spResultsOrderedTranspose.csv
+rm spResultsOrdered.csv
+
+echo $(IFS=$'\n'; 
+    for i in `cat tcResults.csv | cut -f 2,3,4,5 -d " " | sort -u`;
+    do
+        echo $(echo $i; grep $(echo "$i ") tcResults.csv | cut -f6 -d " "; echo ",") ; 
+    done) > tcResultsOrdered.csv
+tr , '\n' < tcResultsOrdered.csv > tcResultsOrderedTranspose.csv
+sed -i 's/^ *//' tcResultsOrderedTranspose.csv
+rm tcResultsOrdered.csv
+
+echo $(IFS=$'\n'; 
+    for i in `cat colResults.csv | cut -f 2,3,4,5 -d " " | sort -u`;
+    do
+        echo $(echo $i; grep $(echo "$i ") colResults.csv | cut -f6 -d " "; echo ",") ; 
+    done) > colResultsOrdered.csv
+tr , '\n' < colResultsOrdered.csv > colResultsOrderedTranspose.csv
+sed -i 's/^ *//' colResultsOrderedTranspose.csv
+rm colResultsOrdered.csv
+
