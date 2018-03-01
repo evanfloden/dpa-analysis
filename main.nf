@@ -35,13 +35,18 @@
 params.name = "DPA_Analysis"
 
 // input sequences to align [FASTA]
-params.seqs = "$baseDir/tutorial/seqs/seatoxin.fa"
+params.seqs = "$baseDir/test/seatoxin.fa"
+//params.seqs = "$baseDir/tutorial/seqs/*.fa"
+//params.seqs = "/users/cn/egarriga/datasets/homfam_test/small_group/sub01/*.fa"
 
 // input reference sequences aligned [Aligned FASTA]
-params.refs = "$baseDir/tutorial/refs/seatoxin.ref"
+params.refs = "$baseDir/test/seatoxin.ref"
+//params.refs = "$baseDir/tutorial/refs/*.ref"
+//params.refs = "/users/cn/egarriga/datasets/homfamClustalo/small_group/sub01/*.ref"
 
 // input guide tree(s) [NEWICK]
-//trees = "$baseDir/tutorial/trees/seatoxin.dnd"
+//params.trees = "$baseDir/results/guide_trees/CO_RND/*.dnd"
+//params.trees = "$baseDir/test/*.dnd"
 params.trees = false
 
 // output directory [DIRECTORY]
@@ -52,15 +57,17 @@ params.output = "$baseDir/results"
 //                      MAFFT-GINSI,
 //                      PROBCONS,
 //                      MSAPROB,
-//                      UPP ]
+//                      UPP ] BLENGHT
 params.align_method = "CLUSTALO,MAFFT"
 
 // tree method: [ CLUSTALO,
-//                MAFFT, 
-//                MAFFT-PARTTREE,
+//		  CLUSTALO_RND_LEAVES,
+//                MAFFT,
+//		  MAFFT_RND_LEAVES, 
+//                MAFFT_PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT"
+params.tree_method = "CLUSTALO,CLUSTALO_RND_LEAVES"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
@@ -72,8 +79,7 @@ params.std_align = true
 params.default_align = true
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100,200,500,1000,2000,5000'
-
+params.buckets = '50,100'//'50,100,200,500,1000,2000,5000'
 
 log.info """\
          D P A   A n a l y s i s  ~  version 0.1"
@@ -145,9 +151,11 @@ else {
 
 // Channels for user provided trees [OPTIONAL]
 if ( params.trees ) {
+  log.info "TREES PROVIDED:\n"
   Channel
     .fromPath(params.trees)
     .map { item -> [ item.baseName, "USER_DEFINED", item] }
+    .view()
     .set { treesProvided }
 }
 else {
@@ -188,7 +196,7 @@ process combine_seqs {
     cat seqs.tmp.fa >> completeSeqs.fa
 
     # SHUFFLE ORDER OF SEQUENCES
-    cat completeSeqs.fa | seq-shuf > shuffledCompleteSequences.fa
+    t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
  
     sed '/^\\s*\$/d' shuffledCompleteSequences.fa > ${id}.shuffled_seqs_with_ref.fa
 
@@ -210,12 +218,13 @@ seqsAndRefsComplete
 
 process guide_trees {
    tag "${tree_method}/${id}"
-   publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
+   publishDir "$baseDir/tutorial/results/", mode: 'copy', overwrite: true
 
    input:
      set val(id), \
          file(seqs) \
          from seqsForTrees
+    
      each tree_method from tree_methods.tokenize(',') 
 
    output:
@@ -240,7 +249,7 @@ treesGenerated
 
 process std_alignment {
   
-    tag "${id} - ${align_method} - STD - NA"
+    tag "${id} - ${tree_method} - STD - ${align_method} - NA"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -248,7 +257,7 @@ process std_alignment {
           val(tree_method), \
           file(guide_tree), \
           file(seqs) \
-          from seqsAndTreesSTD
+          from seqsAndTreesSTD.view()
 
       each align_method from align_methods.tokenize(',') 
 
@@ -263,6 +272,7 @@ process std_alignment {
       into std_alignments
 
      script:
+       println "input tree: $guide_tree"
        template "std_align/std_align_${align_method}.sh"
 }
 
@@ -289,7 +299,7 @@ process dpa_alignment {
       val(tree_method), \
       val("dpa_align"), \
       val(bucket_size), \
-      file("${id}.dpa_${bucket_size}.${align_method}.with.${tree_method}.tree.aln") \
+      file("*.aln") \
       into dpa_alignments
 
     when:
@@ -297,6 +307,7 @@ process dpa_alignment {
 
     script:
        template "dpa_align/dpa_align_${align_method}.sh"
+
 }
 
 process default_alignment {
@@ -409,5 +420,4 @@ tcScores
 
 colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
-        it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
-
+it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }

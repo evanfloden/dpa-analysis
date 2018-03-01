@@ -1,5 +1,3 @@
-replace_U.pl ${seqs}
-
 run_upp.py -s ${seqs} \
            -m amino \
            -x 1 \

@@ -2,5 +2,6 @@
 work/
 results/
 .nextflow*
-report.*
-trace.*
+report*
+trace*
+what_i_do

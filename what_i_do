@@ -1,0 +1,31 @@
+--- COMMAND LINE ---
+
+nextflow run main.nf -profile crg -with-singularity --std_align=true --default_align=false --buckets=250,1000 --align_method=MAFFT --tree_method=MAFFT_RND_LEAVES --seqs=/users/cn/egarriga/projects/dpa_cp/test/*.fa  --refs=/users/cn/egarriga/projects/dpa_cp/test/*.ref -resume -with-report
+
+--------------------------------------------
+
+TUTORIAL (aadh & hormone_rec)
+/users/cn/egarriga/projects/dpa_cp/tutorial/refs/.ref
+/users/cn/egarriga/projects/dpa_cp/tutorial/seqs/*.fa
+
+TEST (seatoxin)
+/users/cn/egarriga/projects/dpa_cp/test/*.fa  		
+/users/cn/egarriga/projects/dpa_cp/test/*.ref
+
+DATASET
+/users/cn/egarriga/datasets/homfamClustalo/seqs/*.fa
+/users/cn/egarriga/datasets/homfamClustalo/refs/*.ref
+
+
+
+----TO RUN------
+
+^^^^^^ RANDOM ^^^^^^ 
+### MAFFT ###
+nextflow run main.nf -profile crg -with-singularity --std_align=true --default_align=false --buckets=250,1000 --align_method=MAFFT --tree_method=MAFFT_RND --seqs=/users/cn/egarriga/datasets/homfamClustalo/seqs/*.fa  --refs=/users/cn/egarriga/datasets/homfamClustalo/refs/*.ref -resume -with-report
+
+### MAFFT PART_TREE ###
+nextflow run main.nf -profile crg -with-singularity --std_align=true --default_align=false --buckets=250,1000 --align_method=MAFFT --tree_method=MAFFT_PT_RND --seqs=/users/cn/egarriga/projects/dpa_cp/test/*.fa  --refs=/users/cn/egarriga/projects/dpa_cp/test/*.ref -resume -with-report
+
+### CLUSTALO ###
+nextflow run main.nf -profile crg -with-singularity --std_align=true --default_align=false --buckets=250,1000 --align_method=CLUSTALO --tree_method=CLUSTALO_RND --seqs=/users/cn/egarriga/projects/dpa_cp/test/*.fa  --refs=/users/cn/egarriga/projects/dpa_cp/test/*.ref -resume -with-report
