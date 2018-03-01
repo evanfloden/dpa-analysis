@@ -53,26 +53,26 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO,MAFFT,MAFFT-GINSI,UPP,PROBCONS,MSAPROBS,TCOFFEE"
+params.align_method = "CLUSTALO,MAFFT"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT,NJ"
+params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = false
+params.std_align = true
 
 // create default alignments [BOOL]
 params.default_align = true
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,250,1000,5000'
+params.buckets = '50,100,200,500,1000,2000,5000'
 
 
 log.info """\
@@ -188,7 +188,7 @@ process combine_seqs {
     cat seqs.tmp.fa >> completeSeqs.fa
 
     # SHUFFLE ORDER OF SEQUENCES
-    t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
+    cat completeSeqs.fa | seq-shuf > shuffledCompleteSequences.fa
  
     sed '/^\\s*\$/d' shuffledCompleteSequences.fa > ${id}.shuffled_seqs_with_ref.fa
 

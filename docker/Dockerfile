@@ -107,15 +107,14 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
-    git checkout ca33a72e644c85e3e0dc8576ac92d718772d67b2 && \
+    git checkout ddc7141dfb3bf6d34dd298a6a476aab2cd80cca9 && \
     cd compile && \
     make t_coffee && \
     cp t_coffee /bin/.
 
-ENV CACHE_4_TCOFFEE=/tmp/tcoffee/cache
-ENV LOCKDIR_4_TCOFFEE=/tmp/tcoffee/lock
-ENV TMP_4_TCOFFEE=/tmp/tcoffee/tcf
-ENV DIR_4_TCOFFEE=/tmp/tcoffee/dir
+ENV CACHE_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/cache'
+ENV LOCKDIR_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/lock'
+ENV TMP_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/tmp'
 
 # Test Data
 RUN mkdir /test_data && \
