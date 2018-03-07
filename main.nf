@@ -53,7 +53,7 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO,MAFFT"
+params.align_method = "UPP"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
@@ -66,10 +66,10 @@ params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT"
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = true
+params.std_align = false
 
 // create default alignments [BOOL]
-params.default_align = true
+params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
 params.buckets = '50,100,200,500,1000,2000,5000'
@@ -209,7 +209,7 @@ seqsAndRefsComplete
  */
 
 process guide_trees {
-   tag "${tree_method}/${id}"
+   tag "${id}.${tree_method}"
    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
 
    input:
@@ -240,7 +240,7 @@ treesGenerated
 
 process std_alignment {
   
-    tag "${id} - ${align_method} - STD - NA"
+    tag "${id}.${align_method}.STD.NA.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -269,7 +269,7 @@ process std_alignment {
 
 process dpa_alignment {
 
-    tag "${id} - ${align_method} - DPA - ${bucket_size}"
+    tag "${id}.${align_method}.DPA.${bucket_size}.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -301,7 +301,7 @@ process dpa_alignment {
 
 process default_alignment {
 
-    tag "${id} - ${align_method} - DEFAULT - NA"
+    tag "${id}.${align_method}.DEFAULT.NA.${align_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
