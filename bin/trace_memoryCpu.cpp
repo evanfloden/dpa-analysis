@@ -5,12 +5,15 @@
 #include <iterator>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
 using namespace std;
 
-	string fileName=argv[1];
-    vector<string> tree_methods= {"NA","CLUSTALO","MAFFT","MAFFT_PT","NJ","CLUSTALO_RND_LEAVES","MAFFT_RND"};	//MAFFT_RND -> need to check
+
+    vector<string> tree_methods= {/*"NA",*/"CLUSTALO","MAFFT","MAFFT_PT","NJ","CLUSTALO_RND_LEAVES","MAFFT_RND"};	//MAFFT_RND -> need to check
     vector<string> align_methods= {"CLUSTALO","MAFFT","MAFFT_GINSI","UPP","PROBCONS","MSAPROBS","TCOFFEE"};  	//mafft_sparsecore -> need the CODE
     																											// MSA_DYNAMIC -> need to include
+	vector< double > guide_tree_memory;
+	vector< double > guide_tree_cpu;
 
 	vector< std::vector<double> > df_memory_matrix;
 	vector< std::vector<double> > df_cpu_matrix;
@@ -45,8 +48,8 @@ using namespace std;
 	double combine_mem=0;
 	double combine_cpu=0;
 
-	double guide_mem=0;
-	double guide_cpu=0;
+	//double guide_mem=0;
+	//double guide_cpu=0;
 
 	double eval_mem=0;
 	double eval_cpu=0;
@@ -130,6 +133,23 @@ void printMatrix(vector< std::vector<double> > matrix){
 	}
 	cout<<endl;	
 }
+void printVector(vector< double> matrix){
+	int i=0;
+	for (auto tree: tree_methods)	//parse all the lines into vectors
+	{
+	  	cout<<tree<<"\t";
+	  	i++;
+	}
+	cout<<endl;
+	//-------------
+	int t=0;
+	for (auto element: matrix)	//parse all the lines into vectors
+	{
+	  	cout<<element<<"\t";
+	  	i++;
+	}
+	cout<<endl;	
+}
 string removeExt(string s, string ext){
 	if ( s != ext &&
 	     s.size() > ext.size() &&
@@ -154,19 +174,54 @@ void proc_combine_seqs(vector<string> line){
 
 	//print_elements(line);	 
 }
-void proc_guide_trees(vector<string> line){
-
-	guide_mem+=stod(line[vmem_pos]);
-	guide_cpu+=stod(line[realtime_pos]);
-
-	//print_elements(line);	
+void removeParentesis(string &word){
+	int i = 0;
+	while (i < word.size()) {
+		if(word[i] == '(' || word[i] == ')')
+		{
+		    word.erase(i,1);
+		} else {
+		    i++;
+		}
+	}
 }
-void proc_dpa_alignment(vector<string> line,string alignMethod/*,string treeMethod*/, string bucket){	
+void proc_guide_trees(vector<string> line){
+	vector<string> aux;
+	string strAux;
+	string treeMethod;
 
-	string auxBucket = removeExt(bucket, ")");
-	int bucket_size=stoi(auxBucket);
-	
-	int row =getIndex(tree_methods, "NA"); //NA bc we dont have the tree on the TRACE
+	split(line[3],' ',aux);
+	strAux=aux[1];
+	aux={};
+	split(strAux,'.',aux);
+	//print_elements(aux);
+
+	treeMethod=aux[1];
+	removeParentesis(treeMethod);
+
+	int index =getIndex(::tree_methods, treeMethod);
+
+	guide_tree_memory[index]+=stod(line[vmem_pos]);
+	guide_tree_cpu[index]+=stod(line[realtime_pos]);
+}
+void proc_dpa_alignment(vector<string> line){	
+	vector<string> aux;
+	string strAux;
+	string alignMethod;
+	string treeMethod;
+
+	split(line[3],' ',aux);
+	strAux=aux[1];
+	aux={};
+	split(strAux,'.',aux);
+
+	alignMethod=aux[1];
+	int bucket_size=stoi(aux[3]);
+	treeMethod=aux[4];
+	removeParentesis(treeMethod);
+
+	//cout<<"dpa>>\talign: "<<alignMethod<<"\ttree: "<<treeMethod<<"\tbucket: "<<bucket_size<<endl;
+	int row =getIndex(tree_methods, treeMethod); 
 	int column =getIndex(align_methods,alignMethod);
 
 	switch(bucket_size) { //{50,100,200,500,1000,2000,5000};
@@ -200,26 +255,51 @@ void proc_dpa_alignment(vector<string> line,string alignMethod/*,string treeMeth
 			break; } 
 	}
 }
-void proc_default_alignment(vector<string> line, string alignMethod){
+void proc_default_alignment(vector<string> line){
+	vector<string> aux;
+	string strAux;
+	string alignMethod;
+	string treeMethod = "NA";	// NA or the same as alignMethod ?
+								//			treeMethod=aux[4];
+	split(line[3],' ',aux);
+	strAux=aux[1];
+	aux={};
+	split(strAux,'.',aux);
 
-	int row =getIndex(tree_methods, "NA");
+	alignMethod=aux[1];
+	treeMethod=aux[4];
+	removeParentesis(treeMethod);
+
+	int row =getIndex(tree_methods, treeMethod); 
 	int column =getIndex(align_methods,alignMethod);
 
 	df_memory_matrix[row][column]= stod(line[vmem_pos]);
 	df_cpu_matrix[row][column]+=stod(line[realtime_pos]);
 
-	//print_elements(line);
-
-	//cout<<"row: "<<row<<" column: "<<column<<" mem value: "<<memory_matrix[row][column]<<endl;
+	//cout<<"default>>\talign: "<<alignMethod<<"\ttree: "<<treeMethod<<endl;
 }
-void proc_std_alignment(vector<string> line,string alignMethod,string treeMethod){
+void proc_std_alignment(vector<string> line){
+	vector<string> aux;
+	string strAux;
+	string alignMethod;
+	string treeMethod;	
+
+	split(line[3],' ',aux);
+	strAux=aux[1];
+	aux={};
+	split(strAux,'.',aux);
+
+	alignMethod=aux[1];
+	treeMethod=aux[4];
+	removeParentesis(treeMethod);
+
 	int row =getIndex(tree_methods, treeMethod);
 	int column =getIndex(align_methods,alignMethod);
 
 	std_memory_matrix[row][column]= stod(line[vmem_pos]);
 	std_cpu_matrix[row][column]+=stod(line[realtime_pos]);
 
-	//print_elements(line);
+	//cout<<"std>>\talign: "<<alignMethod<<"\ttree: "<<treeMethod<<endl;
 }
 void proc_evaluate(vector<string> line){
 	if(line[vmem_pos].compare("-")!=0){
@@ -229,11 +309,31 @@ void proc_evaluate(vector<string> line){
 		eval_cpu+=stod(line[realtime_pos]);
 	}
 }
-int main ()
+void correctTree(){
+//CO_guidetree_real = CO_default - CO_standard
+	int row =getIndex(tree_methods, "CLUSTALO");
+	int column =getIndex(align_methods,"CLUSTALO");
+
+	double CO_guidetree_memory = df_memory_matrix[row][column] - std_memory_matrix[row][column];
+	double CO_guidetree_cpu = df_cpu_matrix[row][column] - std_cpu_matrix[row][column];
+
+	guide_tree_memory[row]=CO_guidetree_memory;
+	guide_tree_cpu[row]=CO_guidetree_cpu;
+}
+int main (int argc, char* argv[])
 {
+	string fileName=argv[1];
     char tab_delim ='\t';
     char space_delim =' ';
 	
+    guide_tree_memory.resize(tree_methods.size());
+    guide_tree_cpu.resize(tree_methods.size());
+    for(int i = 0 ; i < tree_methods.size() ; ++i)
+    {
+        guide_tree_memory[i]=0;
+        guide_tree_cpu[i]=0;
+    }
+
 	expandMatrix(df_memory_matrix);
 	expandMatrix(df_cpu_matrix);
 
@@ -256,11 +356,21 @@ int main ()
 	expandMatrix(_5000memory_matrix);
 	expandMatrix(_5000cpu_matrix);
 
-    string line;
-	ifstream inFile;
-	inFile.open(fileName);
-	std::getline(inFile, line);
-	print_usedFields(line);
+
+	// grep file to remove the FAILED
+	system(("cat "+fileName+"| grep \"CACHED\\|COMPLETED\" > clean_trace.txt").c_str());
+	//*******************************
+
+    string line, lineAux;
+	ifstream inFile,inFileAux;
+
+	inFileAux.open(fileName);
+	inFile.open("clean_trace.txt");
+
+	//get header INFO
+	std::getline(inFileAux, lineAux);
+	print_usedFields(lineAux);
+
 	while (std::getline(inFile, line))
     {
         vector<string> row_values;
@@ -271,24 +381,40 @@ int main ()
         int i=0;	//position of the field on the line
         for (auto vector: row_values)	//parse all the lines into vectors
         {
+        	//cout<<"i value: "<<i<<"\t vector: "<<vector<<endl;
+
         	if (i==procces_name_pos){
         		split(vector, space_delim, line_values);	//parse the line depending on the process_name
 				
         		if(line_values[0]=="combine_seqs"){proc_combine_seqs(row_values);}
         		else if(line_values[0]=="guide_trees"){proc_guide_trees(row_values);}
-        		else if(line_values[0]=="dpa_alignment"){proc_dpa_alignment(row_values,line_values[3],line_values[7]);}
-        		else if(line_values[0]=="default_alignment"){proc_default_alignment(row_values,line_values[3]);}
-        		else if(line_values[0]=="std_alignment"){proc_std_alignment(row_values,line_values[7],line_values[3]);}
+        		else if(line_values[0]=="dpa_alignment"){proc_dpa_alignment(row_values);}
+        		else if(line_values[0]=="default_alignment"){proc_default_alignment(row_values);}
+        		else if(line_values[0]=="std_alignment"){proc_std_alignment(row_values);}
         		else if(line_values[0]=="evaluate"){proc_evaluate(row_values);}
         	}
         	i++;
         }
-
     }     
 	inFile.close();
-	cout<<"--COMBINE SEQS--\n\tMemory:\t"<<combine_mem<<"\t\tCPU Usage:\t"<<combine_cpu<<endl;
-	cout<<"--GUIDE TREE--\n\tMemory:\t"<<guide_mem<<"\t\tCPU Usage:\t"<<guide_cpu<<endl;
-	cout<<"--EVALUATE--\n\tMemory:\t"<<eval_mem<<"\t\tCPU Usage:\t"<<eval_cpu<<endl;
+	inFileAux.close();
+
+	//remove auxiliar trace file
+	system("rm clean_trace.txt");
+
+	//adjust CO tree generation values
+	correctTree();
+
+	//format decimals to print --> avoid cinetific + 3 decimals
+	cout << fixed;
+	cout << setprecision(3);
+
+	cout<<"::COMBINE SEQS::\tMemory:\t"<<combine_mem<<"\t\tCPU Usage:\t"<<combine_cpu<<endl;
+	cout<<"\n::GUIDE TREE::\n\tMemory:\t\n";
+		printVector(guide_tree_memory);
+		cout<<"\tCPU Usage:\n";
+		printVector(guide_tree_cpu);
+	cout<<"\n::EVALUATE::\n\tMemory:\t"<<eval_mem<<"\t\tCPU Usage:\t"<<eval_cpu<<endl;
 
 	//DEFAULT
 	cout<<"\n::DEFAULT MEMORY MATRIX::\n\t\t";
