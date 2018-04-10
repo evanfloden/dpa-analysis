@@ -18,9 +18,12 @@ inline bool exist (const std::string& name)
 	struct stat buffer;
 	return (stat (name.c_str(), &buffer) == 0);
 }
-void cleanDirectory()
+void cleanDirectory(string seqFile, int finalBucket)
 {
-	std::system (("mv "+seqName+"_"+to_string(finalBucket)+".aln" "+outDir).c_str());
+        //Extract the seqName from the fileName
+        string ext = ".fa";
+        string seqName = seqFile.substr(0, seqFile.size() - ext.size());            
+	std::system (("mv "+seqName+"_"+to_string(finalBucket)+".aln ").c_str());
 
 }
 
@@ -44,6 +47,8 @@ bool run_tc_msa(string seqFile, int bucketSize)
 	//if the outfile is diff we will think it is a ERROR
 	if(exist(out_File)){
 		cout<<"TC FINISHED with size "<<bucketSize<<endl;
+                std::system(("rm "+seqName+"_"+to_string(bucketSize-1)+".aln").c_str());
+
 		std::system(("mv out.aln "+seqName+"_"+to_string(bucketSize)+".aln").c_str());
 		return true;
 	}else{
@@ -58,7 +63,6 @@ bool check_tc(string seqFile, int x)
 	if (run_tc_msa(seqFile,x))
 	{
 		cout<<"The file EXIST"<<endl;
-
 		if((count==1)||(::increase))	//we hit the OK in the fierst round
 		{
 			x++;
@@ -103,7 +107,7 @@ int main(int argc, char *argv[]){
     check_tc(seqFile,bucketSize);
 
     cout << "DONE "<<finalBucket<< endl;
-    cleanDirectory();
+    cleanDirectory(seqFile, finalBucket);
     return finalBucket;
     //return 0;
 	}

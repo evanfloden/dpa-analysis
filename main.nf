@@ -35,18 +35,13 @@
 params.name = "DPA_Analysis"
 
 // input sequences to align [FASTA]
-params.seqs = "$baseDir/test/seatoxin.fa"
-//params.seqs = "$baseDir/tutorial/seqs/*.fa"
-//params.seqs = "/users/cn/egarriga/datasets/homfam_test/small_group/sub01/*.fa"
+params.seqs = "$baseDir/tutorial/seqs/seatoxin.fa"
 
 // input reference sequences aligned [Aligned FASTA]
-params.refs = "$baseDir/test/seatoxin.ref"
-//params.refs = "$baseDir/tutorial/refs/*.ref"
-//params.refs = "/users/cn/egarriga/datasets/homfamClustalo/small_group/sub01/*.ref"
+params.refs = "$baseDir/tutorial/refs/seatoxin.ref"
 
 // input guide tree(s) [NEWICK]
-//params.trees = "$baseDir/results/guide_trees/CO_RND/*.dnd"
-//params.trees = "$baseDir/test/*.dnd"
+//trees = "$baseDir/tutorial/trees/seatoxin.dnd"
 params.trees = false
 
 // output directory [DIRECTORY]
@@ -57,29 +52,28 @@ params.output = "$baseDir/results"
 //                      MAFFT-GINSI,
 //                      PROBCONS,
 //                      MSAPROB,
-//                      UPP ] BLENGHT
-params.align_method = "CLUSTALO,MAFFT"
+//                      UPP ]
+params.align_method = "CLUSTALO"
 
 // tree method: [ CLUSTALO,
-//		  CLUSTALO_RND_LEAVES,
-//                MAFFT,
-//		  MAFFT_RND_LEAVES, 
-//                MAFFT_PARTTREE,
+//                MAFFT, 
+//                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO,CLUSTALO_RND_LEAVES"
+params.tree_method = "CLUSTALO"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = true
+params.std_align = false
 
 // create default alignments [BOOL]
-params.default_align = true
+params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100'//'50,100,200,500,1000,2000,5000'
+params.buckets = '50,100,250,500,1000,2000,5000'
+
 
 log.info """\
          D P A   A n a l y s i s  ~  version 0.1"
@@ -151,11 +145,9 @@ else {
 
 // Channels for user provided trees [OPTIONAL]
 if ( params.trees ) {
-  log.info "TREES PROVIDED:\n"
   Channel
     .fromPath(params.trees)
     .map { item -> [ item.baseName, "USER_DEFINED", item] }
-    .view()
     .set { treesProvided }
 }
 else {
@@ -196,7 +188,7 @@ process combine_seqs {
     cat seqs.tmp.fa >> completeSeqs.fa
 
     # SHUFFLE ORDER OF SEQUENCES
-    t_coffee -other_pg seq_reformat -in completeSeqs.fa -output fasta_seq -out shuffledCompleteSequences.fa -action +reorder random
+    cat completeSeqs.fa | seq-shuf > shuffledCompleteSequences.fa
  
     sed '/^\\s*\$/d' shuffledCompleteSequences.fa > ${id}.shuffled_seqs_with_ref.fa
 
@@ -217,14 +209,13 @@ seqsAndRefsComplete
  */
 
 process guide_trees {
-   tag "${tree_method}/${id}"
-   publishDir "$baseDir/tutorial/results/", mode: 'copy', overwrite: true
+   tag "${id}.${tree_method}"
+   publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
 
    input:
      set val(id), \
          file(seqs) \
          from seqsForTrees
-    
      each tree_method from tree_methods.tokenize(',') 
 
    output:
@@ -249,7 +240,7 @@ treesGenerated
 
 process std_alignment {
   
-    tag "${id} - ${tree_method} - STD - ${align_method} - NA"
+    tag "${id}.${align_method}.STD.NA.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -257,7 +248,7 @@ process std_alignment {
           val(tree_method), \
           file(guide_tree), \
           file(seqs) \
-          from seqsAndTreesSTD.view()
+          from seqsAndTreesSTD
 
       each align_method from align_methods.tokenize(',') 
 
@@ -272,14 +263,13 @@ process std_alignment {
       into std_alignments
 
      script:
-       println "input tree: $guide_tree"
        template "std_align/std_align_${align_method}.sh"
 }
 
 
 process dpa_alignment {
 
-    tag "${id} - ${align_method} - DPA - ${bucket_size}"
+    tag "${id}.${align_method}.DPA.${bucket_size}.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -307,12 +297,11 @@ process dpa_alignment {
 
     script:
        template "dpa_align/dpa_align_${align_method}.sh"
-
 }
 
 process default_alignment {
 
-    tag "${id} - ${align_method} - DEFAULT - NA"
+    tag "${id}.${align_method}.DEFAULT.NA.${align_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
 
     input:
@@ -408,8 +397,6 @@ process evaluate {
             >> "score.col.tsv"
     """
 }
- 
-
 spScores
     .collectFile(name:"spScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
@@ -420,4 +407,11 @@ tcScores
 
 colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
-it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
+        it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
+
+workflow.onComplete {
+    println (['bash','-c', "./bin/cpuDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./bin/memoryDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+
+}
