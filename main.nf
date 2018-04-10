@@ -53,23 +53,23 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "UPP"
+params.align_method = "CLUSTALO"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO,MAFFT,MAFFT_PT"
+params.tree_method = "CLUSTALO"
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = false
+params.std_align = true
 
 // create default alignments [BOOL]
-params.default_align = false
+params.default_align = true
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
 params.buckets = '50,100,200,500,1000,2000,5000'
