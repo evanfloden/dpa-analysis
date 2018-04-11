@@ -66,13 +66,13 @@ params.tree_method = "CLUSTALO"
 params.dpa_align = true
 
 // create standard alignments [BOOL]
-params.std_align = true
+params.std_align = false
 
 // create default alignments [BOOL]
-params.default_align = true
+params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100,200,500,1000,2000,5000'
+params.buckets = '50,100,250,500,1000,2000,5000'
 
 
 log.info """\
@@ -289,7 +289,7 @@ process dpa_alignment {
       val(tree_method), \
       val("dpa_align"), \
       val(bucket_size), \
-      file("${id}.dpa_${bucket_size}.${align_method}.with.${tree_method}.tree.aln") \
+      file("*.aln") \
       into dpa_alignments
 
     when:
@@ -397,8 +397,6 @@ process evaluate {
             >> "score.col.tsv"
     """
 }
- 
-
 spScores
     .collectFile(name:"spScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
@@ -411,3 +409,9 @@ colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
+workflow.onComplete {
+    println (['bash','-c', "./bin/cpuDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./bin/memoryDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+
+}
