@@ -409,9 +409,10 @@ colScores
     .collectFile(name:"colScores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
-workflow.onComplete {
+ workflow.onComplete {
     println (['bash','-c', "./bin/cpuDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./bin/memoryDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./bin/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./bin/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 
 }
