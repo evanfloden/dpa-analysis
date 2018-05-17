@@ -1,3 +1,3 @@
 clustalo --infile=${seqs} \
-         --outfmt=fa \
+         --outfmt=fa  \
          -o ${id}.default.${align_method}.aln
