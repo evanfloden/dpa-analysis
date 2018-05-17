@@ -1,6 +1,7 @@
 #! /bin/sh
 
-$baseDir/bin/msa_dynamic ${seqs} ${bucket_size}
+##$baseDir/bin/msa_dynamic ${seqs} ${bucket_size}
+$baseDir/bin/msa_decreasing ${seqs} ${bucket_size}
 
 a=\$?
 
