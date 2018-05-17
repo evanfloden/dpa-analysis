@@ -49,6 +49,7 @@ params.output = "$baseDir/results"
 
 // alignment method:  [ CLUSTALO,
 //                      MAFFT,
+//			 MAFFT-FFTNS1,
 //                      MAFFT-GINSI,
 //                      PROBCONS,
 //                      MSAPROB,
@@ -57,6 +58,7 @@ params.align_method = "CLUSTALO"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
+//		  MAFFT-FFTNS1, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
@@ -72,7 +74,7 @@ params.std_align = false
 params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100,250,500,1000,2000,5000'
+params.buckets = '5,10,20,30,40,50'
 
 
 log.info """\
@@ -209,10 +211,10 @@ seqsAndRefsComplete
  */
 
 process guide_trees {
-   tag "${id}.${tree_method}"
-   publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
-
-   input:
+    tag "${id}.${tree_method}"
+    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
+   
+    input:
      set val(id), \
          file(seqs) \
          from seqsForTrees
@@ -242,7 +244,7 @@ process std_alignment {
   
     tag "${id}.${align_method}.STD.NA.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-
+    
     input:
       set val(id), \
           val(tree_method), \
@@ -342,7 +344,7 @@ refs2
 
 process evaluate {
 
-    tag "${id} - ${tree_method} - ${align_method} - ${align_type} - ${bucket_size}"
+    tag "${id}.${align_method}.${tree_method}.${align_type}.${bucket_size}"
 
     input:
       set val(id), \
@@ -395,6 +397,7 @@ process evaluate {
             -compare_mode column \
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
             >> "score.col.tsv"
+	
     """
 }
 spScores
@@ -410,9 +413,11 @@ colScores
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
  workflow.onComplete {
-    println (['bash','-c', "./bin/cpuDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./bin/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./bin/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/script_cpu.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/script_results.sh"].execute().text)
+
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 
 }
