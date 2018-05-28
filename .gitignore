@@ -1,4 +1,5 @@
 *.html
+*.csv
 work/
 results/
 .nextflow*
