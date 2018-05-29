@@ -42,9 +42,9 @@ RUN wget http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz && \
     rm /clustal-omega-1.2.4.tar.gz
 
 # install MAFFT
-RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src.tgz && \
-    tar xfvz mafft-7.310-with-extensions-src.tgz && \
-    cd mafft-7.310-with-extensions/core/ && \
+RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.397-with-extensions-src.tgz && \
+    tar xfvz mafft-7.397-with-extensions-src.tgz && \
+    cd mafft-7.397-with-extensions/core/ && \
     sed -i "s/PREFIX = \/usr\/local/PREFIX = \/mafft/g" Makefile && \
     sed -i "s/BINDIR = \$(PREFIX)\/bin/BINDIR = \/mafft\/bin/g" Makefile && \
     make clean && \
@@ -55,8 +55,8 @@ RUN wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src
     export "PATH=$PATH:/mafft/bin" && \ 
     export MAFFT_BINARIES="" && \
     cp /mafft/bin/* /bin/. && \
-    mv /mafft-7.310-with-extensions /mafft && \
-    rm /mafft-7.310-with-extensions-src.tgz
+    mv /mafft-7.397-with-extensions /mafft && \
+    rm /mafft-7.397-with-extensions-src.tgz
 
 # Install PROBCONS
 RUN apt-get update \
