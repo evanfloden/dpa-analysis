@@ -107,7 +107,7 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
-    git checkout ddc7141dfb3bf6d34dd298a6a476aab2cd80cca9 && \
+    git checkout 3c3d66e9797f32beaff56cf3d06522b8dd65460f && \
     cd compile && \
     make t_coffee && \
     cp t_coffee /bin/.
