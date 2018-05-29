@@ -45,9 +45,9 @@ MAINTAINER Evan Floden
 ##
 # install mafft
 ##
-  wget http://mafft.cbrc.jp/alignment/software/mafft-7.310-with-extensions-src.tgz
-  tar xfvz mafft-7.310-with-extensions-src.tgz
-  cd mafft-7.310-with-extensions/core/
+  wget https://mafft.cbrc.jp/alignment/software/mafft-7.397-with-extensions-src.tgz
+  tar xfvz mafft-7.397-with-extensions-src.tgz
+  cd mafft-7.397-with-extensions/core/
   sed -i "s/PREFIX = \/usr\/local/PREFIX = \/mafft/g" Makefile 
   sed -i "s/BINDIR = \$(PREFIX)\/bin/BINDIR = \/mafft\/bin/g" Makefile
   make clean
@@ -58,8 +58,8 @@ MAINTAINER Evan Floden
   export "PATH=$PATH:/mafft/bin"
   export MAFFT_BINARIES=""
   cp /mafft/bin/* /bin/.
-  mv /mafft-7.310-with-extensions /mafft
-  rm /mafft-7.310-with-extensions-src.tgz
+  mv /mafft-7.397-with-extensions /mafft
+  rm /mafft-7.397-with-extensions-src.tgz
   cd /
 
 ##
@@ -122,7 +122,7 @@ MAINTAINER Evan Floden
 ##
   git clone https://github.com/cbcrg/tcoffee.git tcoffee
   cd tcoffee 
-  git checkout ddc7141dfb3bf6d34dd298a6a476aab2cd80cca9 
+  git checkout 3c3d66e9797f32beaff56cf3d06522b8dd65460f 
   cd compile
   make t_coffee
   cp t_coffee /bin/.

@@ -44,23 +44,30 @@ params.refs = "$baseDir/tutorial/refs/seatoxin.ref"
 //trees = "$baseDir/tutorial/trees/seatoxin.dnd"
 params.trees = false
 
+//input fasta file with sequences and reference seeds [FASTA]
+params.combined = false
+
 // output directory [DIRECTORY]
 params.output = "$baseDir/results"
 
 // alignment method:  [ CLUSTALO,
 //                      MAFFT,
+//			 MAFFT-FFTNS1,
 //                      MAFFT-GINSI,
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
-params.align_method = "CLUSTALO"
+
+params.align_method = "CLUSTALO,MAFFT-FFTNS1"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
+//		  MAFFT-FFTNS1, 
 //                MAFFT-PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO"
+params.tree_method = "CLUSTALO,MAFFT-FFTNS1"
+
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
@@ -72,7 +79,9 @@ params.std_align = false
 params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
-params.buckets = '50,100,250,500,1000,2000,5000'
+
+//params.buckets = '50,100,200,500,1000,2000,5000'
+params.buckets= '1000'
 
 
 log.info """\
@@ -82,6 +91,7 @@ log.info """\
          Input sequences (FASTA)                               : ${params.seqs}
          Input references (Aligned FASTA)                      : ${params.refs}
          Input trees (NEWICK)                                  : ${params.trees}
+         Input combined sequences (FASTA)		       : ${params.combined}
          Output directory (DIRECTORY)                          : ${params.output}
          Alignment methods [CLUSTALO|MAFFT]                    : ${params.align_method}
          Tree method [CLUSTALO|MAFFT|CLUSTALO_RND|MAFFT_RND]   : ${params.tree_method}
@@ -96,8 +106,8 @@ log.info """\
 //
 // EXPLICITLY STATE WHICH MODE WE ARE RUNNING IN BASED ON INPUT ARGUMENTS
 // 
-if( !params.seqs ) 
-    error "Parameter `--seqs` is required, see README."
+//if( !params.seqs ) 
+//    error "Parameter `--seqs` is required, see README."
 
 // Mode 1: Basic Alignment Mode
 if ( !params.refs && !params.trees ) 
@@ -114,6 +124,12 @@ else if ( !params.refs && params.trees )
 // Mode 4: Reference Alignment Mode with Custom Guide Tree
 else if ( params.refs && params.trees ) 
   log.info "Running in Mode 4: Reference Alignment Mode with Custom Guide Tree\n"
+
+// Mode 5: Combined seqeunces provided
+
+// Mode 6: Combined sequence & guide tree provided
+else if (params.refs && params.combined)
+  log.info "Running in Mode 6: Combined sequence with Custom Guide Tree \n"
 
 else  
     error "Error in determining running mode, see README."
@@ -141,6 +157,17 @@ if( params.refs ) {
 }
 else { 
     Channel.empty().into { refs2; seqsAndRefs }
+}
+
+// Channels for user provided seqs and ref [OPTIONAL]
+if ( params.combined ) {
+  Channel
+    .fromPath(params.combined)
+    .map { item -> [ item.baseName, item] }
+    .set { seqsProvided }
+}
+else {
+    Channel.empty().set { seqsProvided }
 }
 
 // Channels for user provided trees [OPTIONAL]
@@ -178,6 +205,9 @@ process combine_seqs {
       file("${id}.shuffled_seqs_with_ref.fa") \
       into seqsAndRefsComplete
 
+  when:
+     !params.combined
+
   script:
     """
     # CREATE A FASTA FILE CONTAINING ALL SEQUENCES (SEQS + REFS)
@@ -196,10 +226,13 @@ process combine_seqs {
 }
 
 
-seqsAndRefsComplete
-  .mix ( seqs3 )
-  .into { seqsForAlign; seqsForDefaultAlign; seqsForTrees }
+//seqsAndRefsComplete
+//  .mix ( seqs3 )
+//  .into { seqsForAlign; seqsForDefaultAlign; seqsForTrees }
 
+seqsAndRefsComplete
+  .mix ( seqsProvided )
+  .into { seqsForAlign; seqsForDefaultAlign; seqsForTrees }
 
 /*
  * GENERATE GUIDE TREES USING "--tree_method"
@@ -209,10 +242,12 @@ seqsAndRefsComplete
  */
 
 process guide_trees {
-   tag "${id}.${tree_method}"
-   publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
 
-   input:
+    tag "${id}.${tree_method}"
+    publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
+   
+    input:
+
      set val(id), \
          file(seqs) \
          from seqsForTrees
@@ -242,7 +277,7 @@ process std_alignment {
   
     tag "${id}.${align_method}.STD.NA.${tree_method}"
     publishDir "${params.output}/alignments", mode: 'copy', overwrite: true
-
+    
     input:
       set val(id), \
           val(tree_method), \
@@ -342,7 +377,7 @@ refs2
 
 process evaluate {
 
-    tag "${id} - ${tree_method} - ${align_method} - ${align_type} - ${bucket_size}"
+    tag "${id}.${align_method}.${tree_method}.${align_type}.${bucket_size}"
 
     input:
       set val(id), \
@@ -395,6 +430,7 @@ process evaluate {
             -compare_mode column \
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
             >> "score.col.tsv"
+	
     """
 }
 spScores
@@ -410,9 +446,12 @@ colScores
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
  workflow.onComplete {
-    println (['bash','-c', "./bin/cpuDPA.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./bin/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./bin/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+
+    println (['bash','-c', "./scripts/script_cpu.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+    println (['bash','-c', "./scripts/script_result.sh ${workflow.runName} ${params.output}/scores"].execute().text)
+
+    println "Execution status: ${ workflow.success ? 'OK' : 'failed' } runName: ${workflow.runName}"
 
 }
