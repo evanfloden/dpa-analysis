@@ -57,6 +57,7 @@ params.output = "$baseDir/results"
 //                      PROBCONS,
 //                      MSAPROB,
 //                      UPP ]
+
 params.align_method = "CLUSTALO,MAFFT-FFTNS1"
 
 // tree method: [ CLUSTALO,
@@ -66,6 +67,7 @@ params.align_method = "CLUSTALO,MAFFT-FFTNS1"
 //                PROBCONS,
 //                MSAPROB ]
 params.tree_method = "CLUSTALO,MAFFT-FFTNS1"
+
 
 // create dpa alignments [BOOL]
 params.dpa_align = true
@@ -77,8 +79,10 @@ params.std_align = false
 params.default_align = false
 
 // bucket sizes for DPA [COMMA SEPARATED VALUES]
+
 //params.buckets = '50,100,200,500,1000,2000,5000'
 params.buckets= '1000'
+
 
 log.info """\
          D P A   A n a l y s i s  ~  version 0.1"
@@ -238,10 +242,12 @@ seqsAndRefsComplete
  */
 
 process guide_trees {
+
     tag "${id}.${tree_method}"
     publishDir "${params.output}/guide_trees", mode: 'copy', overwrite: true
    
     input:
+
      set val(id), \
          file(seqs) \
          from seqsForTrees
@@ -440,10 +446,12 @@ colScores
         it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text }
 
  workflow.onComplete {
+
     println (['bash','-c', "./scripts/script_cpu.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
     println (['bash','-c', "./scripts/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
     println (['bash','-c', "./scripts/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
     println (['bash','-c', "./scripts/script_result.sh ${workflow.runName} ${params.output}/scores"].execute().text)
 
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' } runName: ${workflow.runName}"
+
 }
