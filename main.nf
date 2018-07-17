@@ -58,15 +58,15 @@ params.output = "$baseDir/results"
 //                      MSAPROB,
 //                      UPP ]
 
-params.align_method = "CLUSTALO,MAFFT-FFTNS1"
+params.align_method = "MAFFT-GINSI"//CLUSTALO,MAFFT-FFTNS1,MAFFT-GINSI,PROBCONS,UPP"
 
 // tree method: [ CLUSTALO,
 //                MAFFT, 
 //		  MAFFT-FFTNS1, 
-//                MAFFT-PARTTREE,
+//                MAFFT_PARTTREE,
 //                PROBCONS,
 //                MSAPROB ]
-params.tree_method = "CLUSTALO,MAFFT-FFTNS1"
+params.tree_method = "CLUSTALO,MAFFT-FFTNS1,MAFFT_PARTTREE"
 
 
 // create dpa alignments [BOOL]
@@ -378,6 +378,7 @@ refs2
 process evaluate {
 
     tag "${id}.${align_method}.${tree_method}.${align_type}.${bucket_size}"
+    publishDir "${params.output}/sc", mode: 'copy', overwrite: true
 
     input:
       set val(id), \
@@ -392,17 +393,17 @@ process evaluate {
     output:
       set val(id), val(tree_method), \
           val(align_method), val(align_type), \
-          val(bucket_size), file("score.sp.tsv") \
+          val(bucket_size), file("score.sp.tsv"), file("${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.sp") \
           into spScores
 
       set val(id), val(tree_method), \
           val(align_method), val(align_type), \
-          val(bucket_size), file("score.tc.tsv") \
+          val(bucket_size), file("score.tc.tsv"), file("${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.tc")\
           into tcScores
 
       set val(id), val(tree_method), \
           val(align_method), val(align_type), \
-          val(bucket_size), file("score.col.tsv") \
+          val(bucket_size), file("score.col.tsv"),file("${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.col") \
           into colScores
 
     when:
@@ -415,21 +416,26 @@ process evaluate {
              -al2 ${test_alignment} \
             -compare_mode sp \
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
-            >> "score.sp.tsv"
+           > "${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.sp"
+	
+cat "${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.sp" >> "score.sp.tsv"
 
        t_coffee -other_pg aln_compare \
              -al1 ${ref_alignment} \
              -al2 ${test_alignment} \
             -compare_mode tc \
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
-            >> "score.tc.tsv"
+            >"${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.tc"
+cat "${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.tc" >> "score.tc.tsv"
 
        t_coffee -other_pg aln_compare \
              -al1 ${ref_alignment} \
              -al2 ${test_alignment} \
             -compare_mode column \
             | grep -v "seq1" |grep -v '*' | awk '{ print \$4}' ORS="\t" \
-            >> "score.col.tsv"
+            >"${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.col"
+cat "${id}.${align_type}.${bucket_size}.${align_method}.${tree_method}.col" >> "score.col.tsv"
+
 	
     """
 }
@@ -448,8 +454,8 @@ colScores
  workflow.onComplete {
 
     println (['bash','-c', "./scripts/script_cpu.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./scripts/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
-    println (['bash','-c', "./scripts/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+   // println (['bash','-c', "./scripts/peakRSSmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
+   // println (['bash','-c', "./scripts/peakVMEMmemory.sh ${workflow.runName} ${params.output}/metrics"].execute().text)
     println (['bash','-c', "./scripts/script_result.sh ${workflow.runName} ${params.output}/scores"].execute().text)
 
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' } runName: ${workflow.runName}"

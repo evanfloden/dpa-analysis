@@ -1,4 +1,4 @@
-t_coffee -dpa -dpa_method mafftfftns1_msa \
+t_coffee -dpa -dpa_method mafftsparsecore_msa \
          -dpa_tree ${guide_tree} \
          -seq ${seqs} \
          -dpa_nseq ${bucket_size} \
