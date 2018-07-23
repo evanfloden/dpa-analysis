@@ -239,9 +239,7 @@ process default_alignment {
        template "default_align/default_align_${align_method}.sh"
 }
 
-//
-// Create a channel that combines references and alignments to be evaluated.
-//
+// Create a channel that combines references and alignments to be evaluated/
 standard_alignments
   .mix ( regressive_alignments )
   .mix ( default_alignments )
