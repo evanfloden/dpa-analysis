@@ -5,4 +5,5 @@ results/
 .nextflow*
 report*
 trace*
-what_i_do
+notebook/.ipynb_checkpoints
+notebook/.nexflow*

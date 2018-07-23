@@ -1,7 +1,7 @@
 FROM debian:jessie
 MAINTAINER Evan Floden <evanfloden@gmail.com>
 
-## Docker image for TCOFFEE DPA including all the requirements
+## Docker image for regressive multiple sequence aligment including all the requirements
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ed \
@@ -36,6 +36,7 @@ RUN wget http://prdownloads.sourceforge.net/argtable/argtable2-13.tar.gz && \
 RUN wget http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz && \
     tar -zxf clustal-omega-1.2.4.tar.gz && \
     cd clustal-omega-1.2.4 && \
+    sed -i '1157s/1024/100/' src/clustal/muscle_tree.c && \
     ./configure && \
     make && \
     make install && \
@@ -107,7 +108,7 @@ RUN wget ftp://ftp.ncbi.nih.gov/pub/msa/msa.tar.Z && \
 # Install TCOFFEE
 RUN git clone https://github.com/cbcrg/tcoffee.git tcoffee && \
     cd tcoffee && \
-    git checkout 3c3d66e9797f32beaff56cf3d06522b8dd65460f && \
+    git checkout 16617b9d9c393de348e0afae3024eb6c69a4527f && \
     cd compile && \
     make t_coffee && \
     cp t_coffee /bin/.
