@@ -32,14 +32,14 @@
  */
 
 // input sequences to align in fasta format
-params.seqs = "$baseDir/data/combined_seqs/{seatoxin,rnasemam}.fa"
+params.seqs = "$baseDir/data/combined_seqs/*.fa"
 
 // input reference sequences aligned in 
-params.refs = "$baseDir/data/refs/{seatoxin,rnasemam}.ref"
+params.refs = "$baseDir/data/refs/*.ref"
 
 // input guide trees in Newick format. Or `false` to generate trees
-params.trees = "$baseDir/data/trees/{seatoxin,rnasemam}.CLUSTALO.dnd"
-//params.trees = false
+//params.trees = "$baseDir/data/trees/*.CLUSTALO.dnd"
+params.trees = false
 
 // which alignment methods to run
 params.align_method = "CLUSTALO"  //,MAFFT-FFTNS1,MAFFT-GINSI,PROBCONS,UPP"
@@ -47,14 +47,11 @@ params.align_method = "CLUSTALO"  //,MAFFT-FFTNS1,MAFFT-GINSI,PROBCONS,UPP"
 // which tree methods to run if `trees` == `false`
 params.tree_method = "CLUSTALO"  //,MAFFT-FFTNS1,MAFFT_PARTTREE"
 
-// output directory [DIRECTORY]
-params.output = "$baseDir/results"
-
 // generate regressive alignments ?
 params.regressive_align = true
 
 // create standard alignments ?
-params.standard_align = false
+params.standard_align = true
 
 // create default alignments ? 
 params.default_align = true
@@ -66,7 +63,7 @@ params.evaluate = true
 params.buckets= '1000'
 
 // output directory
-params.output = "$baseDir/results" // output directory 
+params.output = "$baseDir/results2" // output directory 
 
 
 log.info """\
@@ -104,11 +101,16 @@ if( params.refs ) {
     .set { refs }
 }
 
-// Channels for user provided trees [OPTIONAL]
+// Channels for user provided trees or empty channel if trees are to be generated [OPTIONAL]
 if ( params.trees ) {
   Channel
     .fromPath(params.trees)
     .map { item -> [ item.baseName.tokenize('.')[0], item.baseName.tokenize('.')[1], item] }
+    .set { trees }
+}
+else { 
+  Channel
+    .empty()
     .set { trees }
 }
 
@@ -239,7 +241,7 @@ process default_alignment {
        template "default_align/default_align_${align_method}.sh"
 }
 
-// Create a channel that combines references and alignments to be evaluated/
+// Create a channel that combines references and alignments to be evaluated
 standard_alignments
   .mix ( regressive_alignments )
   .mix ( default_alignments )
