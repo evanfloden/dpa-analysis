@@ -1,7 +1,7 @@
 *.html
 *.csv
 work/
-results/
+results*
 .nextflow*
 report*
 trace*

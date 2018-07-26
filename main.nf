@@ -42,10 +42,10 @@ params.refs = "$baseDir/data/refs/*.ref"
 params.trees = false
 
 // which alignment methods to run
-params.align_method = "CLUSTALO"  //,MAFFT-FFTNS1,MAFFT-GINSI,PROBCONS,UPP"
+params.align_method = "CLUSTALO,MAFFT-FFTNS1"  //,MAFFT-FFTNS1,MAFFT-GINSI,PROBCONS,UPP"
 
 // which tree methods to run if `trees` == `false`
-params.tree_method = "CLUSTALO"  //,MAFFT-FFTNS1,MAFFT_PARTTREE"
+params.tree_method = "CLUSTALO,MAFFT_PARTTREE"  //,MAFFT-FFTNS1,MAFFT_PARTTREE"
 
 // generate regressive alignments ?
 params.regressive_align = true
@@ -63,7 +63,7 @@ params.evaluate = true
 params.buckets= '1000'
 
 // output directory
-params.output = "$baseDir/results2" // output directory 
+params.output = "$baseDir/results3" // output directory 
 
 
 log.info """\
