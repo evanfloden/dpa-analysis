@@ -1,5 +1,4 @@
 *.html
-*.csv
 work/
 results*
 .nextflow*
@@ -7,3 +6,4 @@ report*
 trace*
 notebook/.ipynb_checkpoints
 notebook/.nexflow*
+notebook/results
