@@ -105,6 +105,7 @@ if( params.refs ) {
 if ( params.trees ) {
   Channel
     .fromPath(params.trees)
+    .view()
     .map { item -> [ item.baseName.tokenize('.')[0], item.baseName.tokenize('.')[1], item] }
     .set { trees }
 }

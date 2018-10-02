@@ -1,9 +1,11 @@
-*.html
+*.nfs*
 work/
-results*
+results/
+results_reference/
 .nextflow*
 report*
 trace*
+.ipynb_checkpoints
 notebook/.ipynb_checkpoints
 notebook/.nexflow*
 notebook/results
