@@ -32,10 +32,10 @@
  */
 
 // input sequences to align in fasta format
-params.seqs = "$baseDir/data/combined_seqs/*.fa"
+params.seqs = "$baseDir/data/combined_seqs/seatoxin.fa"
 
 // input reference sequences aligned in 
-params.refs = "$baseDir/data/refs/*.ref"
+params.refs = "$baseDir/data/refs/seatoxin.ref"
 
 // input guide trees in Newick format. Or `false` to generate trees
 //params.trees = "$baseDir/data/trees/*.CLUSTALO.dnd"
@@ -63,7 +63,7 @@ params.evaluate = true
 params.buckets= '1000'
 
 // output directory
-params.output = "$baseDir/results3" // output directory 
+params.output = "$baseDir/results"
 
 
 log.info """\
@@ -315,11 +315,7 @@ process evaluate {
     """
 }
 
-scores
-    .collectFile(name:"scores.${workflow.runName}.csv", newLine:true, storeDir: "$params.output/scores" ) {
-      it[0]+"\t"+it[1]+"\t"+it[2]+"\t"+it[3]+"\t"+it[4]+"\t"+it[5].text+"\t"+it[6].text+"\t"+it[7].text
-    }
-
 workflow.onComplete {
-  println "Execution status: ${ workflow.success ? 'OK' : 'failed' } runName: ${workflow.runName}"
+  println (['bash','-c', "$baseDir/bin/cpu_calculate.sh ${params.output}/individual_scores"].execute().text)
+  println "Execution status: ${ workflow.success ? 'OK' : 'failed' } runName: ${workflow.runName}" 
 }

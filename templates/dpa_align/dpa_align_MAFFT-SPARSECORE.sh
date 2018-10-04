@@ -1,3 +1,5 @@
+replace_U.pl ${seqs} 
+
 t_coffee -dpa -dpa_method mafftsparsecore_msa \
          -dpa_tree ${guide_tree} \
          -seq ${seqs} \
