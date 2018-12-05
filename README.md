@@ -1,4 +1,4 @@
-# Regressive Alignment Analysis
+# Fast and accurate large multiple sequence alignments using root-to-leave regressive computation
 
 For details on how to use the Regressive multiple sequence alignment method, see the [T-Coffee documentation](https://tcoffee.readthedocs.io/en/latest/tcoffee_quickstart_regressive.html?highlight=regressive#quick-start-regressive-algorithm) for the regressive alignment.
 
