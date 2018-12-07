@@ -1,0 +1,16 @@
+sudo: required
+jdk:
+- openjdk8
+services:
+- docker
+branches:
+  only:
+  - master  
+install:
+- sudo apt-get -qq update
+- sudo apt-get -qq -y install graphviz realpath
+- curl -fsSL get.nextflow.io | bash
+script:
+- ./nextflow run . -with-docker --refs=false --trees=false
+- ./nextflow run . -with-docker --trees=false
+- ./nextflow run . -with-docker --trees='./tutorial/trees/*.dnd'
