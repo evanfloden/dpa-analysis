@@ -1,0 +1,16 @@
+reg_method,tree_method,align_method,accuracy
+Non-Regressive,PartTree,Fftns1,29.635
+Non-Regressive,mBed,Fftns1,41.325
+Non-Regressive,PartTree,ClustalO,26.939999999999998
+Non-Regressive,mBed,ClustalO,39.029999999999994
+Non-Regressive,UPP Tree,UPP,44.92999999999999
+Non-Regressive,Sparsecore Tree,Sparsecore,44.980000000000004
+Regressive,PartTree,Fftns1,35.16000000000001
+Regressive,mBed,Fftns1,37.94
+Regressive,PartTree,ClustalO,42.209999999999994
+Regressive,mBed,ClustalO,41.910000000000004
+Regressive,mBed,UPP,47.15
+Regressive,mBed,Sparsecore,51.065
+Regressive,PartTree,Sparsecore,48.675
+Regressive,PartTree,Gins1,47.540000000000006
+Regressive,mBed,Gins1,50.205

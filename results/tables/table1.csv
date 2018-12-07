@@ -1,0 +1,12 @@
+,,non-regressive,regressive,reference,non-regressive,regressive
+tree method,MSA algorithm,score %,score %,score %,cpu time (ms),cpu time (ms)
+PartTree,Fftns1,29.64,35.16,47.84,334415.0,118478.25
+mBed,Fftns1,41.33,37.94,52.03,276878.05,155594.4
+PartTree,ClustalO,26.94,42.21,50.54,3016917.6,377475.0
+mBed,ClustalO,39.03,41.91,53.71,570130.35,338343.0
+Average,,,,,,
+,,,,,,
+default/mBed,UPP,44.93,47.15,49.78,8353874.6,7186327.85
+default/mBed,Sparsecore,44.98,51.06,53.5,2312855.1,3184138.4
+PartTree,Gins1,-,47.54,49.46,-,12477634.05
+mBed,Gins1,-,50.2,53.07,-,10833727.55

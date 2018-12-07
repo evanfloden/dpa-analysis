@@ -1,0 +1,15 @@
+method,aggregation,score,cpu
+Fftns1-PartTree,non-regressive,29.635,334415.0
+Fftns1-PartTree,regressive,35.16000000000001,118478.25
+Fftns1-mBed,non-regressive,41.325,276878.05
+Fftns1-mBed,regressive,37.94,155594.4
+ClustalO-PartTree,non-regressive,26.939999999999998,3016917.6
+ClustalO-PartTree,regressive,42.209999999999994,377475.0
+ClustalO-mBed,non-regressive,39.029999999999994,570130.35
+ClustalO-mBed,regressive,41.910000000000004,338343.0
+UPP-mBed,non-regressive,44.92999999999999,8353874.6
+UPP-mBed,regressive,47.15,7186327.85
+Sparsecore-mBed,non-regressive,44.980000000000004,2312855.1
+Sparsecore-mBed,regressive,51.065,3184138.4
+Ginsi-mBed,regressive,50.205,10833727.55
+Ginsi-PartTree,regressive,47.540000000000006,12477634.05
