@@ -3,7 +3,7 @@
 This repository contains data, documentation, analysis and Nextflow workflow for the manuscript "Fast and accurate large multiple sequence alignments using root-to-leave regressive computation".
 
 
-#### For details on how to use the Regressive multiple sequence alignment method, see the [T-Coffee documentation](https://tcoffee.readthedocs.io/en/latest/tcoffee_quickstart_regressive.html).
+#### For details on how to use the Regressive Multiple Sequence Alignment method, see the [T-Coffee documentation](https://tcoffee.readthedocs.io/en/latest/tcoffee_quickstart_regressive.html).
 
 
 ### Credits
