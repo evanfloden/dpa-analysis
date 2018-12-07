@@ -1,23 +1,11 @@
-# Regressive Alignment Analysis
+# Fast and accurate large multiple sequence alignments using root-to-leave regressive computation
 
-This repository contains data, documentation, analysis and a  pipeline for the manuscript "Fast and accurate large multiple sequence alignments using root-to-leave regressive computation".
+### NOTE: For details on how to use the Regressive multiple sequence alignment method, see the [T-Coffee documentation](https://tcoffee.readthedocs.io/en/latest/tcoffee_quickstart_regressive.html?highlight=regressive#quick-start-regressive-algorithm).
 
-For details on how to use the Regressive multiple sequence alignment method, see the [T-Coffee documentation]().
-
-### Notebooks
-This repository contains a series of [Jupyter Notebooks](http://jupyter.org/) that contain 
-the steps for replicating the analysis, tables and figures in the manuscript.
-
-The index jupyter notebook can be found [here](notebook/00_StartHere.ipynb).
-
-### Pipeline
-The pipeline for generating trees, alignments and performing the evaluations is built using 
-[Nextflow](https://www.nextflow.io), a workflow tool to run tasks across 
-multiple compute infrastructures in a very portable manner. It comes with a docker container 
-making installation trivial and results highly reproducible.
+This repository contains data, documentation, analysis and a workflow for the manuscript "Fast and accurate large multiple sequence alignments using root-to-leave regressive computation".
 
 ### Credits
-This pipeline was written by Evan Floden ([evanfloden](https://github.com/evanfloden)) and 
+This workflow was written by Evan Floden ([evanfloden](https://github.com/evanfloden)) and 
 Edgar([edgano](https://github.com/edgano)) at the [Center for Genomic Regulation (CRG)](http://www.crg.eu).
 
 The authors who contributed to the analysis and manuscript are:
@@ -30,6 +18,21 @@ The authors who contributed to the analysis and manuscript are:
 * Fyodor Kondrashov
 * Evan Floden
 * Cedric Notredame
+
+
+### Notebooks
+This repository contains a series of [Jupyter Notebooks](http://jupyter.org/) that contain 
+the steps for replicating the analysis, tables and figures in the manuscript.
+
+The index jupyter notebook can be found [here](notebook/00_StartHere.ipynb).
+
+The notebook executes the pipeline, some steps of which require a lot of resources.
+
+### Pipeline
+The pipeline for generating trees, alignments and performing the evaluations is built using 
+[Nextflow](https://www.nextflow.io), a workflow tool to run tasks across 
+multiple compute infrastructures in a very portable manner. It comes with a docker container 
+making installation trivial and results highly reproducible.
 
 
 ### Pipeline Quick Start
