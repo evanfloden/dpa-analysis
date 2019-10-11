@@ -120,9 +120,9 @@ ENV TMP_4_TCOFFEE='${TMPDIR:-/tmp}/.tcoffee/tmp'
 # Test Data
 RUN mkdir /test_data && \
     cd test_data && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/rnasemam.fa && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/seqs/seatoxin.fa && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/rnasemam.ref && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/refs/seatoxin.ref && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/rnasemam.dnd && \
-    wget https://raw.githubusercontent.com/skptic/dpa-analysis/master/tutorial/trees/seatoxin.dnd 
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/seqs/rnasemam.fa && \
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/seqs/seatoxin.fa && \
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/refs/rnasemam.ref && \
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/refs/seatoxin.ref && \
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/trees/rnasemam.dnd && \
+    wget https://raw.githubusercontent.com/evanfloden/dpa-analysis/master/tutorial/trees/seatoxin.dnd 
